@@ -149,18 +149,24 @@
   .doc-status.status-partial .dot{background:var(--track-priority);}
   .doc-status.status-fail .dot{background:var(--warning);}
   .docs-summary{color:var(--text-secondary);font-size:13px;margin-bottom:10px;}
+  table.docs-table tbody tr.key-doc-issue{background:var(--warning-bg);}
+  table.docs-table tbody tr.key-doc-issue:hover{background:#F1D9D9;}
+  .key-doc-tag{display:inline-block;font-size:11px;font-weight:700;color:var(--warning);border:1px solid var(--warning);border-radius:2px;padding:1px 5px;margin-left:8px;vertical-align:middle;}
 
-  .factor-row{display:grid;grid-template-columns:260px 1fr 130px;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border);}
-  .factor-row:last-child{border-bottom:none;}
-  .factor-text{font-size:13px;}
-  .factor-bar-axis{position:relative;height:18px;background:linear-gradient(to right,transparent 49.9%,var(--border) 49.9%,var(--border) 50.1%,transparent 50.1%);}
-  .factor-bar{position:absolute;top:2px;height:14px;border-radius:2px;}
-  .factor-bar.positive{left:50%;background:var(--track-simplified);}
-  .factor-bar.negative{right:50%;background:var(--warning);}
-  .factor-label{font-size:12px;font-weight:600;text-align:right;}
-  .factor-label.positive{color:var(--track-simplified);}
-  .factor-label.negative{color:var(--warning);}
+  table.factors-table th,table.factors-table td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--border);font-size:13px;vertical-align:top;}
+  table.factors-table thead th{background:#F0F3F5;color:var(--text-secondary);font-weight:600;font-size:12.5px;}
+  table.factors-table tbody tr:last-child td{border-bottom:none;}
+  table.factors-table td.factor-name{font-weight:600;white-space:nowrap;}
+  .influence{display:flex;flex-direction:column;gap:4px;}
+  .influence-dots{display:flex;gap:3px;}
+  .influence-dots .dot{width:9px;height:9px;border-radius:50%;border:1.5px solid var(--border);display:inline-block;}
+  .influence.positive .influence-dots .dot.filled{background:var(--track-simplified);border-color:var(--track-simplified);}
+  .influence.negative .influence-dots .dot.filled{background:var(--warning);border-color:var(--warning);}
+  .influence-text{font-size:12px;font-weight:600;}
+  .influence.positive .influence-text{color:var(--track-simplified);}
+  .influence.negative .influence-text{color:var(--warning);}
   .card-footnote{margin-top:16px;padding-top:14px;border-top:1px solid var(--border);color:var(--text-secondary);font-size:12.5px;}
+  .card-action{margin-top:16px;padding-top:16px;border-top:1px solid var(--border);}
   .no-assess-message,.priority-message{
     background:#F0F3F5;border:1px solid var(--border);border-radius:3px;padding:14px;font-size:13px;color:var(--text);
   }
@@ -187,7 +193,7 @@
   .modal-box{background:#fff;border-radius:3px;padding:24px;width:420px;box-shadow:0 4px 24px rgba(0,0,0,.18);}
   .modal-box h3{margin:0 0 14px;font-size:16px;}
   .modal-box label{display:block;font-size:12.5px;color:var(--text-secondary);margin-bottom:6px;}
-  .modal-box select{width:100%;border:1px solid var(--border);border-radius:3px;padding:9px 10px;margin-bottom:18px;}
+  .modal-box select,.modal-box input[type=text]{width:100%;border:1px solid var(--border);border-radius:3px;padding:9px 10px;margin-bottom:18px;}
   .modal-actions{display:flex;justify-content:flex-end;gap:10px;}
 
   /* ===== Мониторинг ===== */
@@ -197,6 +203,11 @@
   .period-switch button:last-child{border-right:none;}
   .period-switch button.active{background:var(--accent);color:#fff;font-weight:600;}
   .threshold-line{color:var(--text-secondary);font-size:12.5px;}
+
+  .head-tabs{display:flex;background:#fff;border:1px solid var(--border);border-radius:3px;overflow:hidden;margin-bottom:16px;width:fit-content;}
+  .head-tabs button{border:none;background:#fff;padding:9px 20px;font-size:13px;font-weight:600;border-right:1px solid var(--border);color:var(--text-secondary);}
+  .head-tabs button:last-child{border-right:none;}
+  .head-tabs button.active{background:var(--accent);color:#fff;}
 
   .tiles-row{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:16px;}
   .tile{background:#fff;border:1px solid var(--border);border-radius:3px;padding:16px;}
@@ -219,7 +230,6 @@
   .duration-benchmark{position:absolute;top:-4px;bottom:-4px;width:2px;background:var(--text-secondary);}
   .duration-value{font-size:13px;text-align:right;}
   .duration-value .benchmark-note{display:block;font-size:11.5px;color:var(--text-secondary);font-weight:400;}
-  .sparkline-cell{grid-column:2 / span 1;margin-top:4px;}
 
   .quality-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;}
   .quality-card{border:1px solid var(--border);border-radius:3px;padding:16px;}
@@ -236,6 +246,7 @@
   .events-explain{color:var(--text-secondary);font-size:12.5px;margin-bottom:12px;}
   .event-row{display:grid;grid-template-columns:70px 230px 130px 1fr;gap:12px;padding:9px 0;border-bottom:1px solid var(--border);font-size:13px;align-items:start;}
   .event-row:last-child{border-bottom:none;}
+  .event-row.event-header{color:var(--text-secondary);font-weight:600;font-size:12.5px;text-transform:uppercase;letter-spacing:.02em;padding-bottom:10px;}
   .event-time{color:var(--text-secondary);}
   .event-type{font-weight:600;}
   .event-num{color:var(--text-secondary);font-variant-numeric:tabular-nums;}
@@ -272,7 +283,7 @@
    ===================================================================== */
 
 const CONFIG = {
-  SEED: 20775,                    // сид генератора псевдослучайных чисел (детерминированный датасет)
+  SEED: 4874,                     // сид генератора псевдослучайных чисел (детерминированный датасет)
   TOTAL_APPLICATIONS: 240,
   PAGE_SIZE: 25,
   THRESHOLD: 0.82,                // порог маршрутизации (см. раздел 4, шаг 4 ТЗ)
@@ -287,12 +298,14 @@ const CONFIG = {
 };
 
 // Веса формулы скоринга (раздел 4, шаг 3 ТЗ). Базовое значение S = 0.50.
+// Примечание: «Форма направления» исключена из формулы по решению заказчика —
+// поле остаётся в данных заявки и в правиле отказа от оценки (см. Шаг 2),
+// но больше не влияет на балл и не показывается как фактор.
 const SCORE_BASE = 0.50;
 const SCORE_WEIGHTS = {
   packageCompleteness: { 'Полный': 0.14, 'Есть замечания': 0.00, 'Неполный': 0.00 },
   examinations: { 'В полном объёме': 0.12, 'Частично': -0.06, 'Отсутствуют': 0.00 },
   examAge: { 'до 3 месяцев': 0.08, '3–6 месяцев': 0.00, 'более 6 месяцев': -0.10 },
-  referralForm: { 'Электронное (СЭМД)': 0.06, 'Скан-копия': -0.08 },
   examTypeCombined: {
     'Повторное, группа не менялась': 0.10,
     'Повторное, группа менялась': 0.02,
@@ -300,6 +313,7 @@ const SCORE_WEIGHTS = {
   },
   orgCount: { '1': 0.07, '2': 0.00, '3 и более': -0.07 },
   contradictions: { 'Нет': 0.00, 'Выявлены': -0.30 },
+  diagnosisConsistency: { 'Полное совпадение': 0.08, 'Расхождение в формулировках': -0.10 },
   nosology: {
     'Онкологические заболевания': 0.05,
     'Болезни костно-мышечной системы': 0.04,
@@ -334,14 +348,14 @@ const GEN_PROBABILITIES = {
     ['Психические расстройства', 0.10],
     ['Прочие', 0.08],
   ],
-  pkg: [['Полный', 0.66], ['Есть замечания', 0.30], ['Неполный', 0.04]],
+  pkg: [['Полный', 0.46], ['Есть замечания', 0.50], ['Неполный', 0.04]],
   examIfNepolny: [['Отсутствуют', 0.55], ['Частично', 0.45]],
-  examIfZamechaniya: [['Частично', 0.55], ['В полном объёме', 0.40], ['Отсутствуют', 0.05]],
+  examIfZamechaniya: [['Частично', 0.61], ['В полном объёме', 0.38], ['Отсутствуют', 0.01]],
   examIfPolny: [['В полном объёме', 0.78], ['Частично', 0.22]],
-  examAge: [['до 3 месяцев', 0.42], ['3–6 месяцев', 0.36], ['более 6 месяцев', 0.22]],
-  referralForm: [['Электронное (СЭМД)', 0.58], ['Скан-копия', 0.42]],
-  orgCount: [['1', 0.48], ['2', 0.32], ['3 и более', 0.20]],
-  contradictions: [['Нет', 0.94], ['Выявлены', 0.06]],
+  examAge: [['до 3 месяцев', 0.20], ['3–6 месяцев', 0.38], ['более 6 месяцев', 0.42]],
+  referralForm: [['Электронное (СЭМД)', 0.65], ['Скан-копия', 0.35]],
+  orgCount: [['1', 0.40], ['2', 0.36], ['3 и более', 0.24]],
+  contradictions: [['Нет', 0.955], ['Выявлены', 0.045]],
   onsiteForm: [['заочно', 1 - CONFIG.ONSITE_SHARE], ['очно', CONFIG.ONSITE_SHARE]],
   transferReason: [
     ['требуется дообследование', 0.4], ['неполнота сведений', 0.3],
@@ -352,12 +366,12 @@ const GEN_PROBABILITIES = {
 // Человеческие формулировки факторов для карточки заявки (раздел 4, шаг 5 ТЗ).
 // Примечание разработчика: в карточке в качестве объясняющих факторов
 // используются только признаки, связанные с документами и процедурой
-// (полнота пакета, обследования, форма направления, повторность, число
-// медорганизаций, противоречия) — то есть ровно те, для которых ТЗ задаёт
-// формулировки в разделе 4. Нозология и возрастная группа участвуют в
-// расчёте оценки S, но не выводятся эксперту как объясняющий фактор:
-// это осознанное допущение, принятое из соображений корректности и
-// недопустимости демонстрации диагноза/возраста как "причины" трека.
+// (полнота пакета, обследования, повторность, число медорганизаций,
+// противоречия, согласованность диагноза) — то есть ровно те, для которых
+// заданы формулировки. Нозология и возрастная группа участвуют в расчёте
+// оценки S, но не выводятся эксперту как объясняющий фактор: это осознанное
+// допущение, принятое из соображений корректности и недопустимости
+// демонстрации диагноза/возраста как "причины" трека.
 const FACTOR_LABELS = {
   packageCompleteness: {
     'Полный': 'Пакет документов представлен в полном объёме',
@@ -369,10 +383,6 @@ const FACTOR_LABELS = {
   examAge: {
     'до 3 месяцев': 'Давность результатов обследований не превышает 3 месяцев',
     'более 6 месяцев': 'Давность результатов обследований превышает 6 месяцев',
-  },
-  referralForm: {
-    'Электронное (СЭМД)': 'Направление поступило в структурированном электронном виде',
-    'Скан-копия': 'Направление поступило в виде скан-копии',
   },
   examTypeCombined: {
     'Первичное': 'Первичное освидетельствование',
@@ -386,6 +396,21 @@ const FACTOR_LABELS = {
   contradictions: {
     'Выявлены': 'Выявлены расхождения между представленными документами',
   },
+  diagnosisConsistency: {
+    'Полное совпадение': 'Диагноз в направлении и приложенных документах совпадает',
+    'Расхождение в формулировках': 'Расхождение в формулировке диагноза между документами',
+  },
+};
+
+// Короткие названия факторов — колонка «Фактор» в блоке обоснования трека.
+const FACTOR_NAMES = {
+  packageCompleteness: 'Полнота пакета документов',
+  examinations: 'Результаты обследований',
+  examAge: 'Давность обследований',
+  examTypeCombined: 'Тип освидетельствования',
+  orgCount: 'Число медорганизаций',
+  contradictions: 'Противоречия в документах',
+  diagnosisConsistency: 'Согласованность диагноза',
 };
 
 const DOC_NAMES = {
@@ -400,6 +425,27 @@ const DOC_NAMES = {
   prevIpra: 'Индивидуальная программа реабилитации или абилитации (предыдущая)',
   workCharacteristic: 'Производственная характеристика',
   accidentAct: 'Акт о несчастном случае на производстве (форма Н-1)',
+};
+
+// Ключевые документы: направление, результаты обследований, заключение специалиста.
+// Именно по их статусу распознавания принимается решение об отказе от оценки (Шаг 2).
+// Прочие документы (заявление, согласие, выписка, протоколы и т.п.) на оценку не влияют.
+const KEY_DOC_NAMES = [DOC_NAMES.referral, DOC_NAMES.lab, DOC_NAMES.instrumental, DOC_NAMES.specialist];
+
+const KEY_DOC_STATUS_PROBS = [['Распознан', 0.9975], ['Распознан частично', 0.0015], ['Не распознан', 0.0010]];
+const OTHER_DOC_STATUS_PROBS = [['Распознан', 0.80], ['Распознан частично', 0.15], ['Не распознан', 0.05]];
+
+// Тексты для случаев, когда модель отказывается формировать оценку (Шаг 2 ТЗ).
+// Причина конкретизируется — эксперту важно понимать, чего именно не хватает.
+const NO_ASSESSMENT_MESSAGES = {
+  'insufficient-data': 'Оценка не сформирована: недостаточно данных для анализа. Заявка направлена на полный трек.',
+  'diagnosis-mismatch': 'Оценка не сформирована: расхождение в основном диагнозе между документами.',
+  'key-docs-unrecognized': 'Оценка не сформирована: документы распознаны не полностью.',
+};
+const NO_ASSESSMENT_SHORT = {
+  'insufficient-data': 'Оценка не сформирована — недостаточно данных',
+  'diagnosis-mismatch': 'Оценка не сформирована — расхождение в диагнозе',
+  'key-docs-unrecognized': 'Оценка не сформирована — документы распознаны не полностью',
 };
 
 /* =====================================================================
@@ -453,62 +499,80 @@ function formatDateTime(d) {
   return `${pad(d.getHours(), 2)}:${pad(d.getMinutes(), 2)}`;
 }
 
-function daysBetween(a, b) { return Math.round((a - b) / 86400000); }
-
 function scoreApplication(app) {
   let s = SCORE_BASE;
   s += SCORE_WEIGHTS.packageCompleteness[app.packageCompleteness];
   s += SCORE_WEIGHTS.examinations[app.examinations];
   s += SCORE_WEIGHTS.examAge[app.examAge];
-  s += SCORE_WEIGHTS.referralForm[app.referralForm];
   s += SCORE_WEIGHTS.examTypeCombined[app.examTypeScoreKey];
   s += SCORE_WEIGHTS.orgCount[app.orgCount];
   s += SCORE_WEIGHTS.contradictions[app.contradictions];
+  s += (SCORE_WEIGHTS.diagnosisConsistency[app.diagnosisConsistency] || 0);
   s += SCORE_WEIGHTS.nosology[app.nosology];
   s += SCORE_WEIGHTS.ageGroup[app.ageGroup];
   return Math.min(0.98, Math.max(0.02, s));
 }
 
+// Уровень степени влияния фактора для отображения (1 — слабое, 3 — сильное).
+function influenceLevel(weight) {
+  const abs = Math.abs(weight);
+  if (abs >= 0.12) return 3;
+  if (abs >= 0.05) return 2;
+  return 1;
+}
+
 // Отбор до 5 факторов с наибольшим по модулю вкладом (раздел 4, шаг 5 ТЗ).
-// Числовые значения весов не сохраняются для показа — только направление и относительная длина бара.
+// Числовые значения весов не сохраняются для показа — только направление и качественная степень влияния.
 function computeFactors(app) {
   const dims = [
     ['packageCompleteness', app.packageCompleteness],
     ['examinations', app.examinations],
     ['examAge', app.examAge],
-    ['referralForm', app.referralForm],
     ['examTypeCombined', app.examTypeScoreKey],
     ['orgCount', app.orgCount],
     ['contradictions', app.contradictions],
+    ['diagnosisConsistency', app.diagnosisConsistency],
   ];
   const contributions = [];
   for (const [dim, value] of dims) {
     const weight = SCORE_WEIGHTS[dim][value];
     const label = FACTOR_LABELS[dim] && FACTOR_LABELS[dim][value];
     if (weight && Math.abs(weight) > 0.0001 && label) {
-      contributions.push({ weight, label });
+      contributions.push({ dim, weight, label });
     }
   }
   contributions.sort((a, b) => Math.abs(b.weight) - Math.abs(a.weight));
   const top = contributions.slice(0, 5);
-  const maxAbs = Math.max(0.30, ...top.map((c) => Math.abs(c.weight)));
   return top.map((c) => ({
+    name: FACTOR_NAMES[c.dim],
     label: c.label,
     direction: c.weight > 0 ? 'positive' : 'negative',
-    barPercent: Math.round((Math.abs(c.weight) / maxAbs) * 100),
+    level: influenceLevel(c.weight),
   }));
 }
 
+// Порядок применения строго последовательный (раздел 4 ТЗ):
+// нормативное исключение → проверка возможности оценки (в т.ч. новые условия
+// по согласованности диагноза и распознаванию ключевых документов) → скоринг.
 function assignTrack(app) {
   if (app.exclusion !== 'Нет') {
     return { track: 'priority', reasonCode: 'normative' };
   }
-  const noAssessment =
+  if (
     app.packageCompleteness === 'Неполный' ||
     app.examinations === 'Отсутствуют' ||
-    (app.contradictions === 'Выявлены' && app.referralForm === 'Скан-копия');
-  if (noAssessment) {
-    return { track: 'full', reasonCode: 'no-assessment' };
+    (app.contradictions === 'Выявлены' && app.referralForm === 'Скан-копия')
+  ) {
+    return { track: 'full', reasonCode: 'no-assessment', noAssessmentReason: 'insufficient-data' };
+  }
+  if (app.diagnosisConsistency === 'Расхождение в основном диагнозе') {
+    return { track: 'full', reasonCode: 'no-assessment', noAssessmentReason: 'diagnosis-mismatch' };
+  }
+  const keyDocsUnrecognized = app.documents.some(
+    (d) => KEY_DOC_NAMES.includes(d.name) && d.status !== 'Распознан'
+  );
+  if (keyDocsUnrecognized) {
+    return { track: 'full', reasonCode: 'no-assessment', noAssessmentReason: 'key-docs-unrecognized' };
   }
   const score = scoreApplication(app);
   if (score >= CONFIG.THRESHOLD) {
@@ -517,36 +581,63 @@ function assignTrack(app) {
   return { track: 'full', reasonCode: 'score', score };
 }
 
-function pickMedicalDocs(rng, pool, count) {
-  return shuffle(rng, pool).slice(0, Math.min(count, pool.length));
+// Согласованность диагноза между направлением и приложенными документами.
+// Правила генерации (задание заказчика):
+// - при выявленных противоречиях полное совпадение невозможно
+// - при одном источнике документации совпадение ожидаемо (≥0.9)
+// - при трёх и более источниках вероятность полного совпадения падает (~0.6)
+function pickDiagnosisConsistency(rng, app) {
+  if (app.contradictions === 'Выявлены') {
+    return weightedChoice(rng, [
+      ['Расхождение в формулировках', 0.85],
+      ['Расхождение в основном диагнозе', 0.15],
+    ]);
+  }
+  if (app.orgCount === '1') {
+    return weightedChoice(rng, [
+      ['Полное совпадение', 0.94],
+      ['Расхождение в формулировках', 0.05],
+      ['Расхождение в основном диагнозе', 0.01],
+    ]);
+  }
+  if (app.orgCount === '3 и более') {
+    return weightedChoice(rng, [
+      ['Полное совпадение', 0.60],
+      ['Расхождение в формулировках', 0.35],
+      ['Расхождение в основном диагнозе', 0.05],
+    ]);
+  }
+  return weightedChoice(rng, [
+    ['Полное совпадение', 0.83],
+    ['Расхождение в формулировках', 0.15],
+    ['Расхождение в основном диагнозе', 0.02],
+  ]);
 }
 
 function generateDocuments(rng, app, refDate) {
   const docs = [];
   const pushDoc = (name, opts = {}) => {
+    const isKey = KEY_DOC_NAMES.includes(name);
     const format = opts.format || (rng() < 0.55 ? 'СЭМД' : 'Скан-копия PDF');
     const docDate = opts.date || addDays(refDate, -randInt(rng, 3, 180));
     const pages = opts.pages || randInt(rng, 1, 24);
-    const status = opts.status || weightedChoice(rng, [
-      ['Обработан', 0.80], ['Обработан частично', 0.15], ['Не распознан', 0.05],
-    ]);
+    const status = opts.status || weightedChoice(rng, isKey ? KEY_DOC_STATUS_PROBS : OTHER_DOC_STATUS_PROBS);
     docs.push({ name, format, date: docDate, pages, status });
   };
 
-  // Всегда присутствуют
+  // Всегда присутствуют: базовые документы + ключевые (направление, заключение
+  // специалиста; результаты обследований — если они вообще проводились)
   pushDoc(DOC_NAMES.referral, { format: app.referralForm === 'Скан-копия' ? 'Скан-копия PDF' : 'СЭМД' });
   pushDoc(DOC_NAMES.application);
   pushDoc(DOC_NAMES.consent);
-
-  // Медицинские документы: пул зависит от факта отсутствия обследований
-  let medPool = [DOC_NAMES.extract, DOC_NAMES.lab, DOC_NAMES.instrumental, DOC_NAMES.specialist];
-  if (app.examinations === 'Отсутствуют') {
-    medPool = medPool.filter((d) => d !== DOC_NAMES.lab && d !== DOC_NAMES.instrumental);
+  pushDoc(DOC_NAMES.specialist);
+  if (app.examinations !== 'Отсутствуют') {
+    pushDoc(DOC_NAMES.lab);
+    pushDoc(DOC_NAMES.instrumental);
   }
-  let medCount = randInt(rng, 1, 4);
-  if (app.packageCompleteness === 'Неполный') medCount = Math.max(1, medCount - randInt(rng, 1, 2));
-  const medDocs = pickMedicalDocs(rng, medPool, medCount);
-  medDocs.forEach((name) => pushDoc(name));
+
+  // Прочий документ — присутствует не всегда (не влияет на решение об оценке)
+  if (rng() < 0.6) pushDoc(DOC_NAMES.extract);
 
   // Повторное освидетельствование — дополнительные документы
   if (app.examType === 'Повторное') {
@@ -561,6 +652,8 @@ function generateDocuments(rng, app, refDate) {
   }
 
   // Согласованность: "Неполный" пакет → 1-2 документа помечаются как "не распознан"
+  // (сам по себе Шаг 2 уже отправляет такую заявку на полный трек по причине
+  // неполноты пакета — это лишь визуальное подтверждение в таблице документов)
   if (app.packageCompleteness === 'Неполный') {
     const eligible = docs.filter((d) => d.name !== DOC_NAMES.consent);
     const toMark = shuffle(rng, eligible).slice(0, randInt(rng, 1, 2));
@@ -605,23 +698,22 @@ function buildApplication(index, rng, today) {
   app.referralForm = weightedChoice(rng, GEN_PROBABILITIES.referralForm);
   app.orgCount = weightedChoice(rng, GEN_PROBABILITIES.orgCount);
   app.contradictions = weightedChoice(rng, GEN_PROBABILITIES.contradictions);
+  app.diagnosisConsistency = pickDiagnosisConsistency(rng, app);
   app.isWorkInjury = rng() < 0.15;
+
+  // Документы генерируются до маршрутизации: решение об отказе от оценки
+  // (Шаг 2) зависит от статуса распознавания ключевых документов.
+  app.documents = generateDocuments(rng, app, app.receivedDate);
 
   const assignment = assignTrack(app);
   app.track = assignment.track;
   app.reasonCode = assignment.reasonCode;
+  app.noAssessmentReason = assignment.noAssessmentReason || null;
   app.factors = assignment.track !== 'priority' && assignment.reasonCode !== 'no-assessment'
     ? computeFactors(app) : [];
 
-  if (app.track === 'full' && app.reasonCode !== 'no-assessment') {
-    app.form = weightedChoice(rng, GEN_PROBABILITIES.onsiteForm);
-  } else if (app.track === 'full') {
-    app.form = weightedChoice(rng, GEN_PROBABILITIES.onsiteForm);
-  } else {
-    app.form = null;
-  }
+  app.form = app.track === 'full' ? weightedChoice(rng, GEN_PROBABILITIES.onsiteForm) : null;
 
-  app.documents = generateDocuments(rng, app, app.receivedDate);
   app.status = 'Ожидает рассмотрения';
   app.transferred = false;
   app.transferReason = null;
@@ -639,17 +731,42 @@ function buildDurationStats(rng) {
     for (const track of tracks) {
       const benchmark = CONFIG.DURATION_BENCHMARKS[track];
       const avg = Math.max(1, benchmark + (rng() - 0.5) * benchmark * 0.22);
-      const sparkline = [];
-      let v = avg;
-      for (let i = 0; i < 8; i++) {
-        v = Math.max(1, v + (rng() - 0.5) * benchmark * 0.18);
-        sparkline.push(v);
-      }
-      sparkline[7] = avg;
-      stats[period][track] = { avg: Math.round(avg * 10) / 10, sparkline };
+      stats[period][track] = { avg: Math.round(avg * 10) / 10 };
     }
   }
   return stats;
+}
+
+// Сводка по потоку заявок (используется для плиток и полосы распределения
+// на экране мониторинга). Отдельная функция — переиспользуется и для живых
+// данных очереди (неделя/месяц), и для синтетической квартальной агрегации.
+function computeFlowStatsFromList(apps) {
+  const total = apps.length;
+  const simplified = apps.filter((a) => a.track === 'simplified').length;
+  const fullApps = apps.filter((a) => a.track === 'full');
+  const priority = apps.filter((a) => a.track === 'priority').length;
+  const fullOffsite = fullApps.filter((a) => a.form === 'заочно').length;
+  const fullOnsite = fullApps.filter((a) => a.form === 'очно').length;
+  return { total, simplified, full: fullApps.length, priority, fullOffsite, fullOnsite };
+}
+
+// "Квартал" не может быть выборкой из тех же 240 заявок — весь датасет
+// охватывает только отчётный месяц (раздел 3.1 ТЗ), а дела прошлых месяцев
+// уже закрыты и не висят в очереди. Поэтому квартал — самостоятельная,
+// детерминированно сгенерированная агрегированная сводка (по аналогии со
+// сроками рассмотрения), а не фильтр по очереди.
+function buildQuarterFlowStats(rng, monthStats) {
+  const scale = 2.8 + rng() * 0.4;
+  const total = Math.round(monthStats.total * scale);
+  const simplifiedShare = Math.min(0.32, Math.max(0.20, monthStats.simplified / monthStats.total + (rng() - 0.5) * 0.03));
+  const priorityShare = Math.min(0.07, Math.max(0.03, monthStats.priority / monthStats.total + (rng() - 0.5) * 0.015));
+  const simplified = Math.round(total * simplifiedShare);
+  const priority = Math.round(total * priorityShare);
+  const full = total - simplified - priority;
+  const onsiteShare = Math.min(0.45, Math.max(0.20, CONFIG.ONSITE_SHARE + (rng() - 0.5) * 0.06));
+  const fullOnsite = Math.round(full * onsiteShare);
+  const fullOffsite = full - fullOnsite;
+  return { total, simplified, full, priority, fullOffsite, fullOnsite };
 }
 
 function generateDataset() {
@@ -675,8 +792,14 @@ function generateDataset() {
   });
 
   const durationStats = buildDurationStats(rng);
+  const quarterFlowStats = buildQuarterFlowStats(rng, computeFlowStatsFromList(applications));
 
   // Начальная лента событий — строится из истории маршрутизации и переводов.
+  const noAssessmentEventDesc = {
+    'insufficient-data': 'Недостаточно данных для анализа',
+    'diagnosis-mismatch': 'Расхождение в основном диагнозе между документами',
+    'key-docs-unrecognized': 'Ключевые документы распознаны не полностью',
+  };
   const events = [];
   applications.forEach((a) => {
     const dt = new Date(a.receivedDate);
@@ -687,7 +810,7 @@ function generateDataset() {
       description = `Основание: ${a.exclusion}`;
     } else if (a.reasonCode === 'no-assessment') {
       type = 'Оценка не сформирована — заявка направлена на полный трек';
-      description = 'Недостаточно данных для анализа';
+      description = noAssessmentEventDesc[a.noAssessmentReason] || 'Недостаточно данных для анализа';
     } else if (a.track === 'simplified') {
       type = 'Заявка направлена на упрощённый трек';
       description = 'Рассмотрение в сокращённом порядке';
@@ -710,6 +833,7 @@ function generateDataset() {
   return {
     applications,
     durationStats,
+    quarterFlowStats,
     events: events.slice(0, CONFIG.EVENTS_VISIBLE),
   };
 }
@@ -720,12 +844,37 @@ function generateDataset() {
 
 const dataset = generateDataset();
 
+// Проверка фактических долей после генерации (требование приёмки, раздел 3.4 ТЗ).
+(function logActualShares() {
+  const apps = dataset.applications;
+  const total = apps.length;
+  const count = (pred) => apps.filter(pred).length;
+  const pct = (n) => (total ? (n / total * 100).toFixed(1) + '%' : '0%');
+  const simplified = count((a) => a.track === 'simplified');
+  const priority = count((a) => a.track === 'priority');
+  const noAssessment = count((a) => a.reasonCode === 'no-assessment');
+  const insufficientData = count((a) => a.noAssessmentReason === 'insufficient-data');
+  const diagnosisMismatch = count((a) => a.noAssessmentReason === 'diagnosis-mismatch');
+  const keyDocsIssue = count((a) => a.noAssessmentReason === 'key-docs-unrecognized');
+  const diagnosisMismatchShare = count((a) => a.diagnosisConsistency === 'Расхождение в основном диагнозе');
+  console.log('[ЕАВИИАС МСЭ] Фактические доли по датасету (' + total + ' заявок):');
+  console.log('  Упрощённый трек: ' + simplified + ' (' + pct(simplified) + ') — целевой диапазон 25–30%');
+  console.log('  Приоритетный трек: ' + priority + ' (' + pct(priority) + ') — целевой ориентир ~5%');
+  console.log('  Оценка не сформирована (всего): ' + noAssessment + ' (' + pct(noAssessment) + ') — целевой ориентир ~8%');
+  console.log('    · недостаточно данных: ' + insufficientData + ' (' + pct(insufficientData) + ')');
+  console.log('    · расхождение в основном диагнозе: ' + diagnosisMismatch + ' (' + pct(diagnosisMismatch) + ')');
+  console.log('    · ключевые документы распознаны не полностью: ' + keyDocsIssue + ' (' + pct(keyDocsIssue) + ')');
+  console.log('  Согласованность диагноза = "Расхождение в основном диагнозе" (по всему датасету): ' + diagnosisMismatchShare + ' (' + pct(diagnosisMismatchShare) + ') — целевой ориентир ~3%');
+})();
+
 const state = {
   applications: dataset.applications,
   durationStats: dataset.durationStats,
+  quarterFlowStats: dataset.quarterFlowStats,
   events: dataset.events,
   role: 'expert',            // 'expert' | 'head'
   screen: 'queue',           // 'queue' | 'card'
+  headTab: 'monitoring',     // 'queue' | 'monitoring' (только для роли "Руководитель бюро")
   selectedAppId: null,
   filters: { track: 'all', type: 'all', search: '' },
   sort: { field: 'date', dir: 'desc' },
@@ -832,15 +981,31 @@ function renderHeader() {
   `;
 }
 
+// Руководитель бюро видит два экрана через внутренние вкладки: "Очередь"
+// (только просмотр — без действий эксперта) и "Мониторинг" (по умолчанию).
+// Эксперт бюро, как и раньше, работает в едином потоке Очередь → Карточка.
+function renderHeadTabs() {
+  return `
+    <div class="head-tabs" role="tablist" aria-label="Экраны руководителя">
+      <button type="button" data-action="set-head-tab" data-tab="queue" role="tab" aria-selected="${state.headTab === 'queue'}" class="${state.headTab === 'queue' ? 'active' : ''}">Очередь заявок</button>
+      <button type="button" data-action="set-head-tab" data-tab="monitoring" role="tab" aria-selected="${state.headTab === 'monitoring'}" class="${state.headTab === 'monitoring' ? 'active' : ''}">Мониторинг</button>
+    </div>
+  `;
+}
+
 function render() {
   const root = document.getElementById('app-root');
-  const body = state.role === 'expert'
-    ? (state.screen === 'card' ? renderCardScreen() : renderQueueScreen())
-    : renderMonitoringScreen();
+  let body;
+  if (state.role === 'expert') {
+    body = state.screen === 'card' ? renderCardScreen() : renderQueueScreen();
+  } else if (state.headTab === 'queue') {
+    body = renderHeadTabs() + (state.screen === 'card' ? renderCardScreen() : renderQueueScreen());
+  } else {
+    body = renderHeadTabs() + renderMonitoringScreen();
+  }
   root.innerHTML = `${renderHeader()}<div id="app-body" class="screen-fade">${body}</div>`;
   applyCountUps(root);
   attachHandlers();
-  if (state.role === 'head') initSparklines();
 }
 
 /* =====================================================================
@@ -945,7 +1110,7 @@ function renderQueueScreen() {
               <td>
                 <span class="badge ${trackBadgeClass(a)}">${trackBadgeText(a)}</span>
                 ${a.reasonCode === 'no-assessment'
-                  ? `<span class="no-assess-flag" title="Оценка не сформирована — недостаточно данных">i</span>` : ''}
+                  ? `<span class="no-assess-flag" title="${esc(NO_ASSESSMENT_SHORT[a.noAssessmentReason])}">i</span>` : ''}
               </td>
               <td>${esc(a.status)}</td>
             </tr>
@@ -983,19 +1148,24 @@ const FIELD_DEFS = [
   ['Предыдущие освидетельствования', (a) => a.prevExamStatus],
   ['Противоречия в документах', (a) => a.contradictions],
   ['Нормативное исключение', (a) => a.exclusion],
+  ['Согласованность диагноза', (a) => a.diagnosisConsistency],
 ];
 
 function docStatusMarkup(status) {
-  const cls = status === 'Обработан' ? 'status-ok' : status === 'Обработан частично' ? 'status-partial' : 'status-fail';
+  const cls = status === 'Распознан' ? 'status-ok' : status === 'Распознан частично' ? 'status-partial' : 'status-fail';
   return `<span class="doc-status ${cls}"><span class="dot"></span>${esc(status)}</span>`;
 }
 
 function trackExplanationLine(a) {
   if (a.track === 'priority') return 'Нормативно установленный сокращённый срок рассмотрения';
   if (a.transferred) return 'Заявка переведена экспертом на полный трек; рассмотрение проводится в общем порядке';
-  if (a.reasonCode === 'no-assessment') return 'Рассмотрение в общем порядке. Оценка не сформирована — недостаточно данных';
+  if (a.reasonCode === 'no-assessment') return `Рассмотрение в общем порядке. ${NO_ASSESSMENT_SHORT[a.noAssessmentReason]}`;
   if (a.track === 'simplified') return 'Рассмотрение проводится заочно в сокращённом порядке';
   return 'Рассмотрение в общем порядке; при наличии оснований эксперт назначает очную форму';
+}
+
+function influenceDots(level) {
+  return Array.from({ length: 3 }, (_, i) => `<span class="dot${i < level ? ' filled' : ''}"></span>`).join('');
 }
 
 function renderFactorsBlock(a) {
@@ -1003,25 +1173,35 @@ function renderFactorsBlock(a) {
     return `<div class="priority-message">Трек назначен на основании нормативно установленного сокращённого срока рассмотрения. Скоринг не применялся.</div>`;
   }
   if (a.reasonCode === 'no-assessment') {
-    return `<div class="no-assess-message">Оценка не сформирована: недостаточно данных для анализа. Заявка направлена на полный трек.</div>`;
+    return `<div class="no-assess-message">${esc(NO_ASSESSMENT_MESSAGES[a.noAssessmentReason])}</div>`;
   }
-  return a.factors.map((f) => `
-    <div class="factor-row">
-      <div class="factor-text">${esc(f.label)}</div>
-      <div class="factor-bar-axis">
-        <div class="factor-bar ${f.direction}" style="width:${f.barPercent / 2}%"></div>
-      </div>
-      <div class="factor-label ${f.direction}">${f.direction === 'positive' ? 'В пользу упрощённого рассмотрения' : 'Требует внимания'}</div>
-    </div>
-  `).join('');
+  return `
+    <table class="factors-table">
+      <thead><tr><th>Фактор</th><th>Детализация</th><th>Степень влияния</th></tr></thead>
+      <tbody>
+        ${a.factors.map((f) => `
+          <tr>
+            <td class="factor-name">${esc(f.name)}</td>
+            <td>${esc(f.label)}</td>
+            <td>
+              <div class="influence ${f.direction}">
+                <span class="influence-dots" aria-hidden="true">${influenceDots(f.level)}</span>
+                <span class="influence-text">${f.direction === 'positive' ? 'В пользу упрощённого рассмотрения' : 'Требует внимания'}</span>
+              </div>
+            </td>
+          </tr>
+        `).join('')}
+      </tbody>
+    </table>
+  `;
 }
 
 function renderCardScreen() {
   const a = state.applications.find((x) => x.id === state.selectedAppId);
   if (!a) return `<p>Заявка не найдена.</p>`;
-  const processedCount = a.documents.filter((d) => d.status === 'Обработан').length;
+  const recognizedCount = a.documents.filter((d) => d.status === 'Распознан').length;
   const failedCount = a.documents.filter((d) => d.status === 'Не распознан').length;
-  const canTransfer = a.track === 'simplified' && !a.transferred;
+  const canTransfer = state.role === 'expert' && a.track === 'simplified' && !a.transferred;
 
   return `
     <div class="card-topbar">
@@ -1050,21 +1230,24 @@ function renderCardScreen() {
 
     <div class="panel">
       <h2 class="block-title">Приложенные документы</h2>
-      <div class="docs-summary">Документов: ${a.documents.length} · Обработано: ${processedCount} · Не распознано: ${failedCount}</div>
+      <div class="docs-summary">Документов: ${a.documents.length} · Распознано: ${recognizedCount} · Не распознано: ${failedCount}</div>
       <table class="docs-table">
         <thead>
           <tr><th>Наименование</th><th>Формат</th><th>Дата</th><th>Объём (стр.)</th><th>Статус обработки</th></tr>
         </thead>
         <tbody>
-          ${a.documents.map((d, i) => `
-            <tr data-action="open-doc-stub" data-idx="${i}" tabindex="0" role="button" aria-label="Открыть документ ${esc(d.name)}">
-              <td>${esc(d.name)}</td>
+          ${a.documents.map((d, i) => {
+            const isKeyIssue = KEY_DOC_NAMES.includes(d.name) && d.status !== 'Распознан';
+            return `
+            <tr class="${isKeyIssue ? 'key-doc-issue' : ''}" data-action="open-doc-stub" data-idx="${i}" tabindex="0" role="button" aria-label="Открыть документ ${esc(d.name)}">
+              <td>${esc(d.name)}${isKeyIssue ? '<span class="key-doc-tag">Ключевой</span>' : ''}</td>
               <td>${esc(d.format)}</td>
               <td>${formatDate(d.date)}</td>
               <td>${d.pages}</td>
               <td>${docStatusMarkup(d.status)}</td>
             </tr>
-          `).join('')}
+          `;
+          }).join('')}
         </tbody>
       </table>
     </div>
@@ -1073,17 +1256,17 @@ function renderCardScreen() {
       <h2 class="block-title">Факторы, повлиявшие на выбор трека</h2>
       ${renderFactorsBlock(a)}
       <div class="card-footnote">Модуль определяет порядок рассмотрения заявки. Решение по существу принимается экспертом.</div>
-    </div>
-
-    <div class="panel">
-      <h2 class="block-title">Действия</h2>
-      <button type="button" class="btn btn-primary" data-action="open-transfer-modal" data-id="${a.id}" ${canTransfer ? '' : 'disabled'}>
-        ${a.transferred ? 'Заявка переведена на полный трек' : 'Перевести на полный трек'}
-      </button>
+      ${state.role === 'expert' ? `
+        <div class="card-action">
+          <button type="button" class="btn btn-primary" data-action="open-transfer-modal" data-id="${a.id}" ${canTransfer ? '' : 'disabled'}>
+            ${a.transferred ? 'Заявка переведена на полный трек' : 'Перевести на полный трек'}
+          </button>
+        </div>
+      ` : ''}
     </div>
 
     ${renderStubPanel(a)}
-    ${renderTransferModal()}
+    ${state.role === 'expert' ? renderTransferModal() : ''}
   `;
 }
 
@@ -1115,6 +1298,10 @@ function renderTransferModal() {
           <option value="выявлены противоречия">Выявлены противоречия</option>
           <option value="иное">Иное</option>
         </select>
+        <div id="transfer-reason-other-wrap" hidden>
+          <label for="transfer-reason-other">Уточните причину</label>
+          <input type="text" id="transfer-reason-other" placeholder="Опишите причину перевода">
+        </div>
         <div class="modal-actions">
           <button type="button" class="btn" data-action="close-transfer-modal">Отмена</button>
           <button type="button" class="btn btn-primary" data-action="confirm-transfer">Подтвердить перевод</button>
@@ -1128,23 +1315,13 @@ function renderTransferModal() {
    9. РЕНДЕР: МОНИТОРИНГ (роль: руководитель бюро) + SVG-визуализации
    ===================================================================== */
 
-function getPeriodDaysLimit(period) {
-  return period === 'week' ? 7 : period === 'month' ? 30 : 90;
-}
-
-function getMonitoringApps() {
-  const limit = getPeriodDaysLimit(state.monitoringPeriod);
-  return state.applications.filter((a) => a.receivedDaysAgo <= limit);
-}
-
-function svgSparkline(values, width, height, color) {
-  const min = Math.min(...values), max = Math.max(...values);
-  const range = max - min || 1;
-  const step = width / (values.length - 1);
-  const points = values.map((v, i) => `${(i * step).toFixed(1)},${(height - ((v - min) / range) * (height - 4) - 2).toFixed(1)}`).join(' ');
-  return `<svg width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" role="img" aria-label="Динамика за 8 периодов">
-    <polyline points="${points}" fill="none" stroke="${color}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
-  </svg>`;
+// Числа за неделю/месяц — реальный срез очереди (все заявки укладываются
+// в отчётный месяц). Квартал — самостоятельная агрегация, см. buildQuarterFlowStats:
+// заявки прошлых месяцев уже закрыты и не хранятся в этой же очереди.
+function getFlowStats(period) {
+  if (period === 'quarter') return state.quarterFlowStats;
+  const limit = period === 'week' ? 7 : 30;
+  return computeFlowStatsFromList(state.applications.filter((a) => a.receivedDaysAgo <= limit));
 }
 
 function renderDistributionBar(counts, total) {
@@ -1179,12 +1356,9 @@ function renderDurationBlock() {
     return `
       <div class="duration-row">
         <div class="duration-label">${r.label}</div>
-        <div>
-          <div class="duration-bar-track">
-            <div class="duration-bar-fill" style="width:${(s.avg / maxScale * 100).toFixed(1)}%;background:${r.color}"></div>
-            <div class="duration-benchmark" style="left:${(r.benchmark / maxScale * 100).toFixed(1)}%" title="Ориентир: ${r.benchmark} дн."></div>
-          </div>
-          <div class="sparkline-cell" data-sparkline="${r.key}" data-values="${s.sparkline.map((v) => v.toFixed(2)).join(',')}" data-color="${r.color}"></div>
+        <div class="duration-bar-track">
+          <div class="duration-bar-fill" style="width:${(s.avg / maxScale * 100).toFixed(1)}%;background:${r.color}"></div>
+          <div class="duration-benchmark" style="left:${(r.benchmark / maxScale * 100).toFixed(1)}%" title="Ориентир: ${r.benchmark} дн."></div>
         </div>
         <div class="duration-value">${s.avg} раб. дн.<span class="benchmark-note">ориентир ${r.benchmark} дн.</span></div>
       </div>
@@ -1192,17 +1366,7 @@ function renderDurationBlock() {
   }).join('');
 }
 
-function initSparklines() {
-  document.querySelectorAll('[data-sparkline]').forEach((el) => {
-    const values = el.dataset.values.split(',').map(Number);
-    el.innerHTML = svgSparkline(values, 220, 28, el.dataset.color.startsWith('var') ? getComputedStyle(document.documentElement).getPropertyValue(el.dataset.color.slice(4, -1)) || '#5B6B7B' : el.dataset.color);
-  });
-}
-
 function renderQualityBlock() {
-  const monitoringApps = getMonitoringApps();
-  const simplifiedTotal = monitoringApps.filter((a) => a.track === 'simplified' || (a.transferred)).length
-    + state.applications.filter((a) => a.transferred && a.receivedDaysAgo > getPeriodDaysLimit(state.monitoringPeriod)).length * 0;
   const simplifiedBase = state.applications.filter((a) => a.track === 'simplified').length;
   const transferredCount = state.applications.filter((a) => a.transferred).length;
   const transferRate = simplifiedBase ? transferredCount / simplifiedBase : 0;
@@ -1234,6 +1398,12 @@ function renderQualityBlock() {
 function renderEventsBlock() {
   return `
     <div class="events-explain">Журнал фиксирует все назначения треков и действия экспертов. При автоматической маршрутизации журнал является основным источником контроля качества.</div>
+    <div class="event-row event-header">
+      <div>Время</div>
+      <div>Тип события</div>
+      <div>№ заявки</div>
+      <div>Описание</div>
+    </div>
     ${state.events.map((e, i) => `
       <div class="event-row ${i === 0 && e.isNew ? 'new-event' : ''}">
         <div class="event-time">${formatDateTime(e.time)}</div>
@@ -1246,14 +1416,8 @@ function renderEventsBlock() {
 }
 
 function renderMonitoringScreen() {
-  const monitoringApps = getMonitoringApps();
-  const total = monitoringApps.length;
-  const simplifiedN = monitoringApps.filter((a) => a.track === 'simplified').length;
-  const fullApps = monitoringApps.filter((a) => a.track === 'full');
-  const fullN = fullApps.length;
-  const priorityN = monitoringApps.filter((a) => a.track === 'priority').length;
-  const fullOffsiteN = fullApps.filter((a) => a.form === 'заочно').length;
-  const fullOnsiteN = fullApps.filter((a) => a.form === 'очно').length;
+  const flow = getFlowStats(state.monitoringPeriod);
+  const { total, simplified: simplifiedN, full: fullN, priority: priorityN, fullOffsite: fullOffsiteN, fullOnsite: fullOnsiteN } = flow;
   const transferredInPeriod = state.applications.filter((a) => a.transferred).length;
   const simplifiedBase = state.applications.filter((a) => a.track === 'simplified').length;
 
@@ -1267,7 +1431,7 @@ function renderMonitoringScreen() {
         <button type="button" data-action="set-period" data-period="month" class="${state.monitoringPeriod === 'month' ? 'active' : ''}">Месяц</button>
         <button type="button" data-action="set-period" data-period="quarter" class="${state.monitoringPeriod === 'quarter' ? 'active' : ''}">Квартал</button>
       </div>
-      <div class="threshold-line">Порог маршрутизации: 0,82 · установлен ${CONFIG.THRESHOLD_SET_DATE} · изменяется администратором системы</div>
+      <div class="threshold-line">Порог маршрутизации: 0,82 · установлен ${CONFIG.THRESHOLD_SET_DATE}</div>
     </div>
 
     <div class="panel">
@@ -1299,7 +1463,7 @@ function renderMonitoringScreen() {
     </div>
 
     <div class="panel">
-      <h2 class="block-title">Сроки рассмотрения</h2>
+      <h2 class="block-title">Средний срок рассмотрения заявки</h2>
       ${renderDurationBlock()}
     </div>
 
@@ -1328,9 +1492,19 @@ function attachHandlers() {
       if (role === state.role) return;
       state.role = role;
       state.screen = 'queue';
+      state.headTab = 'monitoring';
       state.selectedAppId = null;
       render();
       showToast('info', role === 'head' ? 'Режим: Руководитель бюро' : 'Режим: Эксперт бюро');
+    });
+  });
+
+  root.querySelectorAll('[data-action="set-head-tab"]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      state.headTab = btn.dataset.tab;
+      state.screen = 'queue';
+      state.selectedAppId = null;
+      render();
     });
   });
 
@@ -1351,7 +1525,20 @@ function attachHandlers() {
 
   const searchInput = root.querySelector('[data-action="filter-search"]');
   if (searchInput) {
-    searchInput.addEventListener('input', () => { state.filters.search = searchInput.value; state.page = 1; render(); searchInput.focus(); searchInput.setSelectionRange(searchInput.value.length, searchInput.value.length); });
+    // render() полностью пересоздаёт DOM — старый узел input после этого отсоединён,
+    // поэтому фокус и позицию курсора нужно восстанавливать на НОВОМ узле, иначе
+    // ввод каждого символа выглядит как "зависание" поля (фокус улетает в никуда).
+    searchInput.addEventListener('input', () => {
+      const caret = searchInput.selectionStart;
+      state.filters.search = searchInput.value;
+      state.page = 1;
+      render();
+      const freshInput = document.getElementById('filter-search');
+      if (freshInput) {
+        freshInput.focus();
+        freshInput.setSelectionRange(caret, caret);
+      }
+    });
   }
 
   root.querySelectorAll('[data-action="sort"]').forEach((th) => {
@@ -1384,10 +1571,29 @@ function attachHandlers() {
   root.querySelectorAll('[data-action="close-transfer-modal"]').forEach((btn) => {
     btn.addEventListener('click', () => { state.transferModalAppId = null; render(); });
   });
+
   const confirmBtn = root.querySelector('[data-action="confirm-transfer"]');
+  const reasonSelect = root.querySelector('#transfer-reason');
+  const otherWrap = root.querySelector('#transfer-reason-other-wrap');
+  const otherInput = root.querySelector('#transfer-reason-other');
+  if (reasonSelect && otherWrap && otherInput) {
+    const syncOtherField = () => {
+      const isOther = reasonSelect.value === 'иное';
+      otherWrap.hidden = !isOther;
+      if (confirmBtn) confirmBtn.disabled = isOther && !otherInput.value.trim();
+    };
+    syncOtherField();
+    reasonSelect.addEventListener('change', syncOtherField);
+    otherInput.addEventListener('input', syncOtherField);
+  }
+
   if (confirmBtn) confirmBtn.addEventListener('click', () => {
-    const reasonSelect = document.getElementById('transfer-reason');
-    const reason = reasonSelect ? reasonSelect.value : 'иное';
+    let reason = reasonSelect ? reasonSelect.value : 'иное';
+    if (reason === 'иное') {
+      const otherText = otherInput ? otherInput.value.trim() : '';
+      if (!otherText) return; // кнопка задизейблена в этом состоянии, но проверяем на всякий случай
+      reason = `иное — ${otherText}`;
+    }
     const app = state.applications.find((a) => a.id === state.transferModalAppId);
     if (app) {
       app.transferred = true;
