@@ -1,0 +1,1434 @@
+<title>ЕАВИИАС МСЭ — Заявки на МСЭ</title>
+<meta name="description" content="Интерактивный прототип модуля автоматической маршрутизации заявок на медико-социальную экспертизу">
+<style>
+  :root{
+    --accent:#1B4F72;
+    --bg:#F4F6F8;
+    --panel:#FFFFFF;
+    --border:#D6DCE3;
+    --text:#1F2933;
+    --text-secondary:#5B6B7B;
+    --track-simplified:#1E7A5F;
+    --track-full:#6B7785;
+    --track-priority:#B35309;
+    --warning:#A32E2E;
+    --track-simplified-bg:#E4F1EC;
+    --track-full-bg:#E9ECEF;
+    --track-priority-bg:#FBEBD9;
+    --warning-bg:#F7E5E5;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg);
+    color:var(--text);
+    font-family:-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
+    font-size:14px;
+    line-height:1.45;
+    min-width:1280px;
+  }
+  button,select,input{font-family:inherit;font-size:inherit;color:inherit;}
+  button{cursor:pointer;}
+  button:focus-visible,select:focus-visible,input:focus-visible,[tabindex]:focus-visible,a:focus-visible{
+    outline:2px solid var(--accent);outline-offset:1px;
+  }
+  table{border-collapse:collapse;width:100%;}
+
+  /* ===== Шапка ===== */
+  .app-header{
+    background:var(--accent);
+    color:#fff;
+    display:flex;
+    align-items:center;
+    gap:24px;
+    padding:0 24px;
+    height:56px;
+    position:sticky;top:0;z-index:50;
+  }
+  .app-header .system-name{font-weight:700;font-size:15px;white-space:nowrap;}
+  .app-header .module-name{font-size:13px;opacity:.85;white-space:nowrap;border-left:1px solid rgba(255,255,255,.35);padding-left:16px;}
+  .app-header .spacer{flex:1;}
+  .role-switch{display:flex;background:rgba(255,255,255,.12);border-radius:3px;padding:2px;gap:2px;}
+  .role-switch button{
+    background:transparent;border:none;color:#fff;padding:7px 14px;border-radius:2px;font-size:13px;opacity:.75;
+    transition:background .2s,opacity .2s;
+  }
+  .role-switch button.active{background:#fff;color:var(--accent);opacity:1;font-weight:600;}
+  .role-switch button:not(.active):hover{opacity:1;background:rgba(255,255,255,.1);}
+  .user-stub{font-size:13px;opacity:.9;white-space:nowrap;}
+  .header-date{font-size:13px;opacity:.9;white-space:nowrap;border-left:1px solid rgba(255,255,255,.35);padding-left:16px;}
+
+  #app-body{padding:20px 24px 48px;max-width:1440px;margin:0 auto;}
+
+  .screen-fade{animation:screenFade .28s ease;}
+  @keyframes screenFade{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
+
+  h1.screen-title{font-size:20px;margin:0 0 16px;font-weight:600;}
+  h2.block-title{font-size:16px;margin:0 0 12px;font-weight:600;}
+
+  .panel{background:var(--panel);border:1px solid var(--border);border-radius:3px;padding:16px;margin-bottom:16px;}
+
+  /* ===== Фильтры ===== */
+  .filters-bar{display:flex;align-items:flex-end;gap:16px;flex-wrap:wrap;}
+  .filter-field{display:flex;flex-direction:column;gap:4px;}
+  .filter-field label{font-size:12px;color:var(--text-secondary);}
+  .filter-field select,.filter-field input{
+    border:1px solid var(--border);border-radius:3px;padding:7px 10px;background:#fff;min-width:170px;
+  }
+  .filter-field input[type=search]{min-width:220px;}
+
+  .summary-line{font-size:13px;color:var(--text-secondary);margin:14px 0 10px;display:flex;gap:6px;flex-wrap:wrap;}
+  .summary-line b{color:var(--text);font-weight:600;}
+  .summary-line .sep{color:var(--border);}
+
+  /* ===== Таблица ===== */
+  .table-wrap{border:1px solid var(--border);border-radius:3px;background:#fff;max-height:640px;overflow:auto;}
+  table.queue-table th,table.queue-table td{
+    text-align:left;padding:9px 12px;border-bottom:1px solid var(--border);white-space:nowrap;
+  }
+  table.queue-table thead th{
+    position:sticky;top:0;background:#F0F3F5;color:var(--text-secondary);font-weight:600;font-size:12.5px;
+    text-transform:uppercase;letter-spacing:.02em;z-index:1;border-bottom:1px solid var(--border);
+  }
+  table.queue-table th.sortable{cursor:pointer;user-select:none;}
+  table.queue-table th.sortable:hover{color:var(--text);}
+  table.queue-table th .sort-arrow{margin-left:4px;opacity:.6;}
+  table.queue-table tbody tr{cursor:pointer;transition:background .12s;}
+  table.queue-table tbody tr:hover{background:#F4F8FA;}
+  table.queue-table tbody tr:last-child td{border-bottom:none;}
+
+  .badge{display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:3px;font-size:12.5px;font-weight:600;white-space:nowrap;}
+  .badge.badge-simplified{background:var(--track-simplified-bg);color:var(--track-simplified);}
+  .badge.badge-full{background:var(--track-full-bg);color:var(--track-full);}
+  .badge.badge-priority{background:var(--track-priority-bg);color:var(--track-priority);}
+  .badge.badge-lg{font-size:15px;padding:6px 14px;}
+  .no-assess-flag{
+    display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;border-radius:50%;
+    background:var(--text-secondary);color:#fff;font-size:11px;font-weight:700;cursor:help;margin-left:6px;
+  }
+
+  .pagination{display:flex;align-items:center;gap:6px;margin-top:14px;font-size:13px;flex-wrap:wrap;}
+  .pagination button{
+    border:1px solid var(--border);background:#fff;border-radius:3px;padding:5px 10px;min-width:32px;
+  }
+  .pagination button.active{background:var(--accent);color:#fff;border-color:var(--accent);}
+  .pagination button:disabled{opacity:.4;cursor:default;}
+  .pagination .page-info{color:var(--text-secondary);margin-left:8px;}
+
+  /* ===== Карточка заявки ===== */
+  .card-topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
+  .btn{
+    border:1px solid var(--border);background:#fff;border-radius:3px;padding:8px 16px;font-size:13px;font-weight:600;
+    transition:background .15s,border-color .15s;
+  }
+  .btn:hover{background:#F0F3F5;}
+  .btn-primary{background:var(--accent);color:#fff;border-color:var(--accent);}
+  .btn-primary:hover{background:#164062;}
+  .btn-primary:disabled{background:var(--track-full);border-color:var(--track-full);opacity:.55;cursor:default;}
+  .btn-danger{background:var(--warning);color:#fff;border-color:var(--warning);}
+
+  .card-header-block{display:flex;align-items:flex-start;justify-content:space-between;gap:20px;flex-wrap:wrap;}
+  .card-header-block .meta{display:flex;flex-direction:column;gap:4px;}
+  .card-header-block .app-number{font-size:20px;font-weight:700;}
+  .card-header-block .app-date{color:var(--text-secondary);font-size:13px;}
+  .card-track-explain{margin-top:10px;color:var(--text-secondary);font-size:13px;}
+  .card-track-explain.priority-note{color:var(--track-priority);}
+
+  .field-grid{display:grid;grid-template-columns:1fr 1fr;gap:0 32px;}
+  .field-row{display:flex;justify-content:space-between;gap:16px;padding:8px 0;border-bottom:1px solid var(--border);}
+  .field-row .field-name{color:var(--text-secondary);}
+  .field-row .field-value{font-weight:600;text-align:right;}
+
+  table.docs-table th,table.docs-table td{text-align:left;padding:8px 12px;border-bottom:1px solid var(--border);font-size:13px;}
+  table.docs-table thead th{background:#F0F3F5;color:var(--text-secondary);font-weight:600;font-size:12.5px;}
+  table.docs-table tbody tr{cursor:pointer;transition:background .12s;}
+  table.docs-table tbody tr:hover{background:#F4F8FA;}
+  .doc-status{display:inline-flex;align-items:center;gap:6px;font-weight:600;font-size:12.5px;}
+  .doc-status .dot{width:8px;height:8px;border-radius:50%;display:inline-block;}
+  .doc-status.status-ok .dot{background:var(--track-simplified);}
+  .doc-status.status-partial .dot{background:var(--track-priority);}
+  .doc-status.status-fail .dot{background:var(--warning);}
+  .docs-summary{color:var(--text-secondary);font-size:13px;margin-bottom:10px;}
+
+  .factor-row{display:grid;grid-template-columns:260px 1fr 130px;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border);}
+  .factor-row:last-child{border-bottom:none;}
+  .factor-text{font-size:13px;}
+  .factor-bar-axis{position:relative;height:18px;background:linear-gradient(to right,transparent 49.9%,var(--border) 49.9%,var(--border) 50.1%,transparent 50.1%);}
+  .factor-bar{position:absolute;top:2px;height:14px;border-radius:2px;}
+  .factor-bar.positive{left:50%;background:var(--track-simplified);}
+  .factor-bar.negative{right:50%;background:var(--warning);}
+  .factor-label{font-size:12px;font-weight:600;text-align:right;}
+  .factor-label.positive{color:var(--track-simplified);}
+  .factor-label.negative{color:var(--warning);}
+  .card-footnote{margin-top:16px;padding-top:14px;border-top:1px solid var(--border);color:var(--text-secondary);font-size:12.5px;}
+  .no-assess-message,.priority-message{
+    background:#F0F3F5;border:1px solid var(--border);border-radius:3px;padding:14px;font-size:13px;color:var(--text);
+  }
+
+  .stub-panel{
+    position:fixed;top:0;right:0;height:100%;width:360px;background:#fff;border-left:1px solid var(--border);
+    box-shadow:-2px 0 8px rgba(0,0,0,.08);z-index:80;transform:translateX(100%);transition:transform .25s ease;
+    padding:20px;display:flex;flex-direction:column;
+  }
+  .stub-panel.open{transform:translateX(0);}
+  .stub-panel h3{margin:0 0 12px;font-size:15px;}
+  .stub-panel p{color:var(--text-secondary);font-size:13px;}
+  .stub-overlay{
+    position:fixed;inset:0;background:rgba(31,41,51,.25);z-index:79;opacity:0;pointer-events:none;transition:opacity .25s;
+  }
+  .stub-overlay.open{opacity:1;pointer-events:auto;}
+
+  /* ===== Модальное окно перевода ===== */
+  .modal-overlay{
+    position:fixed;inset:0;background:rgba(31,41,51,.35);z-index:90;display:flex;align-items:center;justify-content:center;
+    opacity:0;pointer-events:none;transition:opacity .2s;
+  }
+  .modal-overlay.open{opacity:1;pointer-events:auto;}
+  .modal-box{background:#fff;border-radius:3px;padding:24px;width:420px;box-shadow:0 4px 24px rgba(0,0,0,.18);}
+  .modal-box h3{margin:0 0 14px;font-size:16px;}
+  .modal-box label{display:block;font-size:12.5px;color:var(--text-secondary);margin-bottom:6px;}
+  .modal-box select{width:100%;border:1px solid var(--border);border-radius:3px;padding:9px 10px;margin-bottom:18px;}
+  .modal-actions{display:flex;justify-content:flex-end;gap:10px;}
+
+  /* ===== Мониторинг ===== */
+  .monitor-controls{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:16px;}
+  .period-switch{display:flex;background:#fff;border:1px solid var(--border);border-radius:3px;overflow:hidden;}
+  .period-switch button{border:none;background:#fff;padding:8px 16px;font-size:13px;border-right:1px solid var(--border);}
+  .period-switch button:last-child{border-right:none;}
+  .period-switch button.active{background:var(--accent);color:#fff;font-weight:600;}
+  .threshold-line{color:var(--text-secondary);font-size:12.5px;}
+
+  .tiles-row{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:16px;}
+  .tile{background:#fff;border:1px solid var(--border);border-radius:3px;padding:16px;}
+  .tile .tile-label{font-size:12.5px;color:var(--text-secondary);margin-bottom:8px;}
+  .tile .tile-value{font-size:28px;font-weight:700;line-height:1;}
+  .tile .tile-sub{font-size:12.5px;color:var(--text-secondary);margin-top:6px;}
+
+  .dist-bar-wrap{margin-top:6px;}
+  .dist-bar{display:flex;width:100%;height:34px;border-radius:3px;overflow:hidden;border:1px solid var(--border);}
+  .dist-seg{height:100%;transition:width .5s ease;}
+  .dist-legend{display:flex;gap:18px;margin-top:10px;flex-wrap:wrap;font-size:12.5px;}
+  .dist-legend .item{display:flex;align-items:center;gap:6px;}
+  .dist-legend .swatch{width:10px;height:10px;border-radius:2px;display:inline-block;}
+
+  .duration-row{display:grid;grid-template-columns:170px 1fr 160px;align-items:center;gap:14px;padding:12px 0;border-bottom:1px solid var(--border);}
+  .duration-row:last-child{border-bottom:none;}
+  .duration-label{font-size:13px;font-weight:600;}
+  .duration-bar-track{background:#EEF1F3;border-radius:3px;height:16px;position:relative;}
+  .duration-bar-fill{height:100%;border-radius:3px;transition:width .5s ease;}
+  .duration-benchmark{position:absolute;top:-4px;bottom:-4px;width:2px;background:var(--text-secondary);}
+  .duration-value{font-size:13px;text-align:right;}
+  .duration-value .benchmark-note{display:block;font-size:11.5px;color:var(--text-secondary);font-weight:400;}
+  .sparkline-cell{grid-column:2 / span 1;margin-top:4px;}
+
+  .quality-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;}
+  .quality-card{border:1px solid var(--border);border-radius:3px;padding:16px;}
+  .quality-card .q-title{font-size:13px;font-weight:600;margin-bottom:8px;}
+  .quality-card .q-value{font-size:24px;font-weight:700;margin-bottom:8px;}
+  .quality-card.warning .q-value{color:var(--warning);}
+  .q-progress-track{background:#EEF1F3;border-radius:3px;height:10px;position:relative;margin-bottom:6px;}
+  .q-progress-fill{height:100%;border-radius:3px;background:var(--track-simplified);transition:width .5s ease;}
+  .quality-card.warning .q-progress-fill{background:var(--warning);}
+  .q-limit-marker{position:absolute;top:-3px;bottom:-3px;width:2px;background:var(--text);}
+  .q-note{font-size:12px;color:var(--text-secondary);}
+  .q-note.warning-note{color:var(--warning);font-weight:600;}
+
+  .events-explain{color:var(--text-secondary);font-size:12.5px;margin-bottom:12px;}
+  .event-row{display:grid;grid-template-columns:70px 230px 130px 1fr;gap:12px;padding:9px 0;border-bottom:1px solid var(--border);font-size:13px;align-items:start;}
+  .event-row:last-child{border-bottom:none;}
+  .event-time{color:var(--text-secondary);}
+  .event-type{font-weight:600;}
+  .event-num{color:var(--text-secondary);font-variant-numeric:tabular-nums;}
+  .event-row.new-event{animation:eventIn .4s ease;}
+  @keyframes eventIn{from{opacity:0;transform:translateY(-8px);background:#EAF3EF;}to{opacity:1;transform:translateY(0);}}
+
+  /* ===== Тосты ===== */
+  #toast-container{position:fixed;top:16px;right:16px;z-index:200;display:flex;flex-direction:column;gap:10px;max-width:360px;}
+  .toast{
+    background:#fff;border-left:4px solid var(--accent);border-radius:3px;box-shadow:0 3px 12px rgba(0,0,0,.15);
+    padding:12px 16px;font-size:13px;opacity:0;transform:translateX(20px);transition:opacity .25s,transform .25s;
+  }
+  .toast.show{opacity:1;transform:translateX(0);}
+  .toast.hide{opacity:0;transform:translateX(20px);}
+  .toast.toast-success{border-left-color:var(--track-simplified);}
+  .toast.toast-warning{border-left-color:var(--warning);}
+  .toast.toast-info{border-left-color:var(--accent);}
+
+  .visually-hidden{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;}
+</style>
+
+<div id="app-root"></div>
+<div id="toast-container" aria-live="polite"></div>
+
+<script>
+'use strict';
+
+/* =====================================================================
+   1. ДАННЫЕ И КОНСТАНТЫ
+   Все параметры генерации, веса скоринга и настройки — здесь.
+   Значения подобраны так, чтобы фактическое распределение треков
+   соответствовало требованиям ТЗ (раздел 3.4): проверено расчётом
+   на фиксированном seed перед сборкой.
+   ===================================================================== */
+
+const CONFIG = {
+  SEED: 20775,                    // сид генератора псевдослучайных чисел (детерминированный датасет)
+  TOTAL_APPLICATIONS: 240,
+  PAGE_SIZE: 25,
+  THRESHOLD: 0.82,                // порог маршрутизации (см. раздел 4, шаг 4 ТЗ)
+  THRESHOLD_SET_DATE: '12.03.2026',
+  PRE_TRANSFERRED_COUNT: 2,       // заявки упрощённого трека, "уже переведённые" ранее в отчётном месяце (исходное состояние демо)
+  TRANSFER_RATE_LIMIT: 0.08,      // граница нормы: доля переводов упрощённый → полный
+  REVIEW_RATE_LIMIT: 0.03,        // граница нормы: доля пересмотренных решений упрощённого трека
+  REVIEW_RATE_STATIC: 0.012,      // статичный показатель для демонстрации (вне интерактивного сценария)
+  DURATION_BENCHMARKS: { simplified: 9, fullOffsite: 21, fullOnsite: 27 },
+  ONSITE_SHARE: 0.32,             // доля дел полного трека, рассматриваемых очно (для агрегатов мониторинга)
+  EVENTS_VISIBLE: 12,
+};
+
+// Веса формулы скоринга (раздел 4, шаг 3 ТЗ). Базовое значение S = 0.50.
+const SCORE_BASE = 0.50;
+const SCORE_WEIGHTS = {
+  packageCompleteness: { 'Полный': 0.14, 'Есть замечания': 0.00, 'Неполный': 0.00 },
+  examinations: { 'В полном объёме': 0.12, 'Частично': -0.06, 'Отсутствуют': 0.00 },
+  examAge: { 'до 3 месяцев': 0.08, '3–6 месяцев': 0.00, 'более 6 месяцев': -0.10 },
+  referralForm: { 'Электронное (СЭМД)': 0.06, 'Скан-копия': -0.08 },
+  examTypeCombined: {
+    'Повторное, группа не менялась': 0.10,
+    'Повторное, группа менялась': 0.02,
+    'Первичное': -0.02,
+  },
+  orgCount: { '1': 0.07, '2': 0.00, '3 и более': -0.07 },
+  contradictions: { 'Нет': 0.00, 'Выявлены': -0.30 },
+  nosology: {
+    'Онкологические заболевания': 0.05,
+    'Болезни костно-мышечной системы': 0.04,
+    'Болезни системы кровообращения': 0.03,
+    'Эндокринные заболевания': 0.02,
+    'Болезни нервной системы': 0.00,
+    'Прочие': -0.03,
+    'Психические расстройства': -0.08,
+  },
+  ageGroup: { '60 и старше': 0.03, '45–59': 0.01, '18–44': 0.00, 'до 18': -0.05 },
+};
+
+// Вероятности генерации признаков (раздел 3.4 ТЗ — подобраны и проверены расчётом,
+// чтобы после применения формулы и порога фактические доли треков попали
+// в целевые диапазоны: упрощённый 25–30%, приоритетный ~5%, "оценка не сформирована" ~8%).
+const GEN_PROBABILITIES = {
+  exclusion: [
+    ['Нет', 0.95],
+    ['Первичное протезирование после ампутации', 0.017],
+    ['Паллиативная помощь', 0.017],
+    ['Участник СВО', 0.016],
+  ],
+  examType: [['Первичное', 0.38], ['Повторное', 0.62]],
+  prevStatus: [['Есть, группа не менялась', 0.78], ['Есть, группа менялась', 0.22]],
+  ageGroup: [['до 18', 0.05], ['18–44', 0.27], ['45–59', 0.28], ['60 и старше', 0.40]],
+  nosology: [
+    ['Онкологические заболевания', 0.15],
+    ['Болезни системы кровообращения', 0.22],
+    ['Болезни костно-мышечной системы', 0.20],
+    ['Болезни нервной системы', 0.13],
+    ['Эндокринные заболевания', 0.12],
+    ['Психические расстройства', 0.10],
+    ['Прочие', 0.08],
+  ],
+  pkg: [['Полный', 0.66], ['Есть замечания', 0.30], ['Неполный', 0.04]],
+  examIfNepolny: [['Отсутствуют', 0.55], ['Частично', 0.45]],
+  examIfZamechaniya: [['Частично', 0.55], ['В полном объёме', 0.40], ['Отсутствуют', 0.05]],
+  examIfPolny: [['В полном объёме', 0.78], ['Частично', 0.22]],
+  examAge: [['до 3 месяцев', 0.42], ['3–6 месяцев', 0.36], ['более 6 месяцев', 0.22]],
+  referralForm: [['Электронное (СЭМД)', 0.58], ['Скан-копия', 0.42]],
+  orgCount: [['1', 0.48], ['2', 0.32], ['3 и более', 0.20]],
+  contradictions: [['Нет', 0.94], ['Выявлены', 0.06]],
+  onsiteForm: [['заочно', 1 - CONFIG.ONSITE_SHARE], ['очно', CONFIG.ONSITE_SHARE]],
+  transferReason: [
+    ['требуется дообследование', 0.4], ['неполнота сведений', 0.3],
+    ['выявлены противоречия', 0.2], ['иное', 0.1],
+  ],
+};
+
+// Человеческие формулировки факторов для карточки заявки (раздел 4, шаг 5 ТЗ).
+// Примечание разработчика: в карточке в качестве объясняющих факторов
+// используются только признаки, связанные с документами и процедурой
+// (полнота пакета, обследования, форма направления, повторность, число
+// медорганизаций, противоречия) — то есть ровно те, для которых ТЗ задаёт
+// формулировки в разделе 4. Нозология и возрастная группа участвуют в
+// расчёте оценки S, но не выводятся эксперту как объясняющий фактор:
+// это осознанное допущение, принятое из соображений корректности и
+// недопустимости демонстрации диагноза/возраста как "причины" трека.
+const FACTOR_LABELS = {
+  packageCompleteness: {
+    'Полный': 'Пакет документов представлен в полном объёме',
+  },
+  examinations: {
+    'В полном объёме': 'Результаты необходимых обследований приложены',
+    'Частично': 'Результаты обследований приложены частично',
+  },
+  examAge: {
+    'до 3 месяцев': 'Давность результатов обследований не превышает 3 месяцев',
+    'более 6 месяцев': 'Давность результатов обследований превышает 6 месяцев',
+  },
+  referralForm: {
+    'Электронное (СЭМД)': 'Направление поступило в структурированном электронном виде',
+    'Скан-копия': 'Направление поступило в виде скан-копии',
+  },
+  examTypeCombined: {
+    'Первичное': 'Первичное освидетельствование',
+    'Повторное, группа не менялась': 'Повторное освидетельствование, группа ранее не изменялась',
+    'Повторное, группа менялась': 'Повторное освидетельствование, группа ранее изменялась',
+  },
+  orgCount: {
+    '1': 'Документы из одной медицинской организации',
+    '3 и более': 'Документы из трёх и более медицинских организаций',
+  },
+  contradictions: {
+    'Выявлены': 'Выявлены расхождения между представленными документами',
+  },
+};
+
+const DOC_NAMES = {
+  referral: 'Направление на медико-социальную экспертизу (форма 088/у)',
+  application: 'Заявление о проведении медико-социальной экспертизы',
+  consent: 'Согласие на обработку персональных данных',
+  extract: 'Выписка из медицинской карты стационарного больного',
+  lab: 'Результаты лабораторных исследований',
+  instrumental: 'Результаты инструментальных исследований',
+  specialist: 'Заключение врача-специалиста',
+  prevProtocol: 'Протокол предыдущего освидетельствования',
+  prevIpra: 'Индивидуальная программа реабилитации или абилитации (предыдущая)',
+  workCharacteristic: 'Производственная характеристика',
+  accidentAct: 'Акт о несчастном случае на производстве (форма Н-1)',
+};
+
+/* =====================================================================
+   2. ГЕНЕРАЦИЯ ДАННЫХ (детерминированная, seeded PRNG)
+   ===================================================================== */
+
+function mulberry32(seed) {
+  let a = seed >>> 0;
+  return function () {
+    a |= 0; a = (a + 0x6D2B79F5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+function weightedChoice(rng, items) {
+  const total = items.reduce((s, it) => s + it[1], 0);
+  let r = rng() * total;
+  for (const [value, w] of items) {
+    if (r < w) return value;
+    r -= w;
+  }
+  return items[items.length - 1][0];
+}
+
+function randInt(rng, min, max) { return Math.floor(rng() * (max - min + 1)) + min; }
+
+function shuffle(rng, arr) {
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(rng() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function pad(n, len) { return String(n).padStart(len, '0'); }
+
+function addDays(date, delta) {
+  const d = new Date(date);
+  d.setDate(d.getDate() + delta);
+  return d;
+}
+
+function formatDate(d) {
+  return `${pad(d.getDate(), 2)}.${pad(d.getMonth() + 1, 2)}.${d.getFullYear()}`;
+}
+
+function formatDateTime(d) {
+  return `${pad(d.getHours(), 2)}:${pad(d.getMinutes(), 2)}`;
+}
+
+function daysBetween(a, b) { return Math.round((a - b) / 86400000); }
+
+function scoreApplication(app) {
+  let s = SCORE_BASE;
+  s += SCORE_WEIGHTS.packageCompleteness[app.packageCompleteness];
+  s += SCORE_WEIGHTS.examinations[app.examinations];
+  s += SCORE_WEIGHTS.examAge[app.examAge];
+  s += SCORE_WEIGHTS.referralForm[app.referralForm];
+  s += SCORE_WEIGHTS.examTypeCombined[app.examTypeScoreKey];
+  s += SCORE_WEIGHTS.orgCount[app.orgCount];
+  s += SCORE_WEIGHTS.contradictions[app.contradictions];
+  s += SCORE_WEIGHTS.nosology[app.nosology];
+  s += SCORE_WEIGHTS.ageGroup[app.ageGroup];
+  return Math.min(0.98, Math.max(0.02, s));
+}
+
+// Отбор до 5 факторов с наибольшим по модулю вкладом (раздел 4, шаг 5 ТЗ).
+// Числовые значения весов не сохраняются для показа — только направление и относительная длина бара.
+function computeFactors(app) {
+  const dims = [
+    ['packageCompleteness', app.packageCompleteness],
+    ['examinations', app.examinations],
+    ['examAge', app.examAge],
+    ['referralForm', app.referralForm],
+    ['examTypeCombined', app.examTypeScoreKey],
+    ['orgCount', app.orgCount],
+    ['contradictions', app.contradictions],
+  ];
+  const contributions = [];
+  for (const [dim, value] of dims) {
+    const weight = SCORE_WEIGHTS[dim][value];
+    const label = FACTOR_LABELS[dim] && FACTOR_LABELS[dim][value];
+    if (weight && Math.abs(weight) > 0.0001 && label) {
+      contributions.push({ weight, label });
+    }
+  }
+  contributions.sort((a, b) => Math.abs(b.weight) - Math.abs(a.weight));
+  const top = contributions.slice(0, 5);
+  const maxAbs = Math.max(0.30, ...top.map((c) => Math.abs(c.weight)));
+  return top.map((c) => ({
+    label: c.label,
+    direction: c.weight > 0 ? 'positive' : 'negative',
+    barPercent: Math.round((Math.abs(c.weight) / maxAbs) * 100),
+  }));
+}
+
+function assignTrack(app) {
+  if (app.exclusion !== 'Нет') {
+    return { track: 'priority', reasonCode: 'normative' };
+  }
+  const noAssessment =
+    app.packageCompleteness === 'Неполный' ||
+    app.examinations === 'Отсутствуют' ||
+    (app.contradictions === 'Выявлены' && app.referralForm === 'Скан-копия');
+  if (noAssessment) {
+    return { track: 'full', reasonCode: 'no-assessment' };
+  }
+  const score = scoreApplication(app);
+  if (score >= CONFIG.THRESHOLD) {
+    return { track: 'simplified', reasonCode: 'score', score };
+  }
+  return { track: 'full', reasonCode: 'score', score };
+}
+
+function pickMedicalDocs(rng, pool, count) {
+  return shuffle(rng, pool).slice(0, Math.min(count, pool.length));
+}
+
+function generateDocuments(rng, app, refDate) {
+  const docs = [];
+  const pushDoc = (name, opts = {}) => {
+    const format = opts.format || (rng() < 0.55 ? 'СЭМД' : 'Скан-копия PDF');
+    const docDate = opts.date || addDays(refDate, -randInt(rng, 3, 180));
+    const pages = opts.pages || randInt(rng, 1, 24);
+    const status = opts.status || weightedChoice(rng, [
+      ['Обработан', 0.80], ['Обработан частично', 0.15], ['Не распознан', 0.05],
+    ]);
+    docs.push({ name, format, date: docDate, pages, status });
+  };
+
+  // Всегда присутствуют
+  pushDoc(DOC_NAMES.referral, { format: app.referralForm === 'Скан-копия' ? 'Скан-копия PDF' : 'СЭМД' });
+  pushDoc(DOC_NAMES.application);
+  pushDoc(DOC_NAMES.consent);
+
+  // Медицинские документы: пул зависит от факта отсутствия обследований
+  let medPool = [DOC_NAMES.extract, DOC_NAMES.lab, DOC_NAMES.instrumental, DOC_NAMES.specialist];
+  if (app.examinations === 'Отсутствуют') {
+    medPool = medPool.filter((d) => d !== DOC_NAMES.lab && d !== DOC_NAMES.instrumental);
+  }
+  let medCount = randInt(rng, 1, 4);
+  if (app.packageCompleteness === 'Неполный') medCount = Math.max(1, medCount - randInt(rng, 1, 2));
+  const medDocs = pickMedicalDocs(rng, medPool, medCount);
+  medDocs.forEach((name) => pushDoc(name));
+
+  // Повторное освидетельствование — дополнительные документы
+  if (app.examType === 'Повторное') {
+    pushDoc(DOC_NAMES.prevProtocol);
+    pushDoc(DOC_NAMES.prevIpra);
+  }
+
+  // ~15% заявок — производственная травма
+  if (app.isWorkInjury) {
+    pushDoc(DOC_NAMES.workCharacteristic);
+    pushDoc(DOC_NAMES.accidentAct);
+  }
+
+  // Согласованность: "Неполный" пакет → 1-2 документа помечаются как "не распознан"
+  if (app.packageCompleteness === 'Неполный') {
+    const eligible = docs.filter((d) => d.name !== DOC_NAMES.consent);
+    const toMark = shuffle(rng, eligible).slice(0, randInt(rng, 1, 2));
+    toMark.forEach((d) => { d.status = 'Не распознан'; });
+  }
+
+  return docs;
+}
+
+function buildApplication(index, rng, today) {
+  const app = {};
+  app.id = index;
+  app.number = `2026-0${pad(index + 1, 4)}`;
+  app.receivedDaysAgo = randInt(rng, 0, 30);
+  app.receivedDate = addDays(today, -app.receivedDaysAgo);
+  app.receivedTime = { h: randInt(rng, 8, 17), m: randInt(rng, 0, 59) };
+
+  app.exclusion = weightedChoice(rng, GEN_PROBABILITIES.exclusion);
+  app.examType = weightedChoice(rng, GEN_PROBABILITIES.examType);
+  if (app.examType === 'Первичное') {
+    app.prevExamStatus = 'Нет';
+    app.examTypeScoreKey = 'Первичное';
+  } else {
+    app.prevExamStatus = weightedChoice(rng, GEN_PROBABILITIES.prevStatus);
+    app.examTypeScoreKey = app.prevExamStatus === 'Есть, группа не менялась'
+      ? 'Повторное, группа не менялась' : 'Повторное, группа менялась';
+  }
+
+  app.ageGroup = weightedChoice(rng, GEN_PROBABILITIES.ageGroup);
+  app.nosology = weightedChoice(rng, GEN_PROBABILITIES.nosology);
+
+  app.packageCompleteness = weightedChoice(rng, GEN_PROBABILITIES.pkg);
+  if (app.packageCompleteness === 'Неполный') {
+    app.examinations = weightedChoice(rng, GEN_PROBABILITIES.examIfNepolny);
+  } else if (app.packageCompleteness === 'Есть замечания') {
+    app.examinations = weightedChoice(rng, GEN_PROBABILITIES.examIfZamechaniya);
+  } else {
+    app.examinations = weightedChoice(rng, GEN_PROBABILITIES.examIfPolny);
+  }
+
+  app.examAge = weightedChoice(rng, GEN_PROBABILITIES.examAge);
+  app.referralForm = weightedChoice(rng, GEN_PROBABILITIES.referralForm);
+  app.orgCount = weightedChoice(rng, GEN_PROBABILITIES.orgCount);
+  app.contradictions = weightedChoice(rng, GEN_PROBABILITIES.contradictions);
+  app.isWorkInjury = rng() < 0.15;
+
+  const assignment = assignTrack(app);
+  app.track = assignment.track;
+  app.reasonCode = assignment.reasonCode;
+  app.factors = assignment.track !== 'priority' && assignment.reasonCode !== 'no-assessment'
+    ? computeFactors(app) : [];
+
+  if (app.track === 'full' && app.reasonCode !== 'no-assessment') {
+    app.form = weightedChoice(rng, GEN_PROBABILITIES.onsiteForm);
+  } else if (app.track === 'full') {
+    app.form = weightedChoice(rng, GEN_PROBABILITIES.onsiteForm);
+  } else {
+    app.form = null;
+  }
+
+  app.documents = generateDocuments(rng, app, app.receivedDate);
+  app.status = 'Ожидает рассмотрения';
+  app.transferred = false;
+  app.transferReason = null;
+  app.transferDate = null;
+
+  return app;
+}
+
+function buildDurationStats(rng) {
+  const periods = ['week', 'month', 'quarter'];
+  const tracks = ['simplified', 'fullOffsite', 'fullOnsite'];
+  const stats = {};
+  for (const period of periods) {
+    stats[period] = {};
+    for (const track of tracks) {
+      const benchmark = CONFIG.DURATION_BENCHMARKS[track];
+      const avg = Math.max(1, benchmark + (rng() - 0.5) * benchmark * 0.22);
+      const sparkline = [];
+      let v = avg;
+      for (let i = 0; i < 8; i++) {
+        v = Math.max(1, v + (rng() - 0.5) * benchmark * 0.18);
+        sparkline.push(v);
+      }
+      sparkline[7] = avg;
+      stats[period][track] = { avg: Math.round(avg * 10) / 10, sparkline };
+    }
+  }
+  return stats;
+}
+
+function generateDataset() {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const rng = mulberry32(CONFIG.SEED);
+  const applications = [];
+  for (let i = 0; i < CONFIG.TOTAL_APPLICATIONS; i++) {
+    applications.push(buildApplication(i, rng, today));
+  }
+
+  // Исходное состояние демонстрации: часть заявок упрощённого трека уже
+  // считается переведённой ранее в отчётном месяце — это даёт наглядную
+  // отправную точку для показателя "доля переводов" (раздел 7, блок 3 ТЗ):
+  // до превышения границы нормы (8%) остаётся 3–5 переводов вручную.
+  const simplifiedApps = applications.filter((a) => a.track === 'simplified');
+  const preTransferred = shuffle(rng, simplifiedApps).slice(0, CONFIG.PRE_TRANSFERRED_COUNT);
+  preTransferred.forEach((a, idx) => {
+    a.transferred = true;
+    a.status = 'Переведена на полный трек';
+    a.transferReason = weightedChoice(rng, GEN_PROBABILITIES.transferReason);
+    a.transferDate = addDays(a.receivedDate, randInt(rng, 1, 5));
+  });
+
+  const durationStats = buildDurationStats(rng);
+
+  // Начальная лента событий — строится из истории маршрутизации и переводов.
+  const events = [];
+  applications.forEach((a) => {
+    const dt = new Date(a.receivedDate);
+    dt.setHours(a.receivedTime.h, a.receivedTime.m, 0, 0);
+    let type, description;
+    if (a.track === 'priority') {
+      type = 'Заявка направлена по нормативному приоритету';
+      description = `Основание: ${a.exclusion}`;
+    } else if (a.reasonCode === 'no-assessment') {
+      type = 'Оценка не сформирована — заявка направлена на полный трек';
+      description = 'Недостаточно данных для анализа';
+    } else if (a.track === 'simplified') {
+      type = 'Заявка направлена на упрощённый трек';
+      description = 'Рассмотрение в сокращённом порядке';
+    } else {
+      type = 'Заявка направлена на полный трек';
+      description = 'Рассмотрение в общем порядке';
+    }
+    events.push({ time: dt, type, number: a.number, description });
+    if (a.transferred) {
+      events.push({
+        time: a.transferDate ? new Date(a.transferDate.getTime() + a.receivedTime.h * 3600000) : dt,
+        type: 'Эксперт перевёл заявку на полный трек',
+        number: a.number,
+        description: `Причина: ${a.transferReason}`,
+      });
+    }
+  });
+  events.sort((a, b) => b.time - a.time);
+
+  return {
+    applications,
+    durationStats,
+    events: events.slice(0, CONFIG.EVENTS_VISIBLE),
+  };
+}
+
+/* =====================================================================
+   3. СОСТОЯНИЕ ПРИЛОЖЕНИЯ (хранится в памяти, без браузерного хранилища)
+   ===================================================================== */
+
+const dataset = generateDataset();
+
+const state = {
+  applications: dataset.applications,
+  durationStats: dataset.durationStats,
+  events: dataset.events,
+  role: 'expert',            // 'expert' | 'head'
+  screen: 'queue',           // 'queue' | 'card'
+  selectedAppId: null,
+  filters: { track: 'all', type: 'all', search: '' },
+  sort: { field: 'date', dir: 'desc' },
+  page: 1,
+  monitoringPeriod: 'month', // 'week' | 'month' | 'quarter'
+  stubPanelOpen: false,
+  transferModalAppId: null,
+};
+
+let toastSeq = 0;
+
+/* =====================================================================
+   4. ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ РЕНДЕРА
+   ===================================================================== */
+
+function esc(str) {
+  return String(str).replace(/[&<>"']/g, (c) => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
+  }[c]));
+}
+
+// Отображаемый трек учитывает ручной перевод эксперта: после перевода
+// заявка визуально становится "Полный" — обратный переход недоступен.
+function effectiveTrack(app) {
+  if (app.transferred) return 'full';
+  return app.track;
+}
+
+function trackBadgeClass(app) {
+  const t = effectiveTrack(app);
+  if (t === 'priority') return 'badge-priority';
+  if (t === 'simplified') return 'badge-simplified';
+  return 'badge-full';
+}
+
+function trackBadgeText(app) {
+  const t = effectiveTrack(app);
+  if (t === 'priority') return 'Приоритетный (нормативный)';
+  if (t === 'simplified') return 'Упрощённый';
+  return 'Полный';
+}
+
+function animateCountUp(el, target, duration = 500) {
+  const isPercent = el.dataset.percent === '1';
+  const start = Number(el.dataset.currentValue || 0);
+  const startTime = performance.now();
+  function step(now) {
+    const progress = Math.min(1, (now - startTime) / duration);
+    const eased = 1 - Math.pow(1 - progress, 2);
+    const value = start + (target - start) * eased;
+    el.textContent = isPercent ? value.toFixed(1) + '%' : Math.round(value).toLocaleString('ru-RU');
+    if (progress < 1) requestAnimationFrame(step);
+    else el.dataset.currentValue = String(target);
+  }
+  requestAnimationFrame(step);
+}
+
+function applyCountUps(root) {
+  root.querySelectorAll('[data-countup]').forEach((el) => {
+    const target = Number(el.dataset.countup);
+    animateCountUp(el, target);
+  });
+}
+
+/* =====================================================================
+   5. ТОСТЫ (УВЕДОМЛЕНИЯ)
+   ===================================================================== */
+
+function showToast(type, text) {
+  const container = document.getElementById('toast-container');
+  const id = 'toast-' + (++toastSeq);
+  const el = document.createElement('div');
+  el.className = `toast toast-${type}`;
+  el.id = id;
+  el.setAttribute('role', 'status');
+  el.textContent = text;
+  container.appendChild(el);
+  requestAnimationFrame(() => el.classList.add('show'));
+  setTimeout(() => {
+    el.classList.add('hide');
+    el.classList.remove('show');
+    setTimeout(() => el.remove(), 260);
+  }, 4000);
+}
+
+/* =====================================================================
+   6. РЕНДЕР: ШАПКА И ОБЩИЙ КАРКАС
+   ===================================================================== */
+
+function renderHeader() {
+  const today = formatDate(new Date());
+  return `
+    <header class="app-header">
+      <div class="system-name">ЕАВИИАС МСЭ</div>
+      <div class="module-name">Заявки на МСЭ</div>
+      <div class="spacer"></div>
+      <div class="role-switch" role="group" aria-label="Переключатель роли">
+        <button type="button" data-action="set-role" data-role="expert" class="${state.role === 'expert' ? 'active' : ''}" aria-pressed="${state.role === 'expert'}">Эксперт бюро</button>
+        <button type="button" data-action="set-role" data-role="head" class="${state.role === 'head' ? 'active' : ''}" aria-pressed="${state.role === 'head'}">Руководитель бюро</button>
+      </div>
+      <div class="user-stub">Смирнова Е.А.</div>
+      <div class="header-date">${today}</div>
+    </header>
+  `;
+}
+
+function render() {
+  const root = document.getElementById('app-root');
+  const body = state.role === 'expert'
+    ? (state.screen === 'card' ? renderCardScreen() : renderQueueScreen())
+    : renderMonitoringScreen();
+  root.innerHTML = `${renderHeader()}<div id="app-body" class="screen-fade">${body}</div>`;
+  applyCountUps(root);
+  attachHandlers();
+  if (state.role === 'head') initSparklines();
+}
+
+/* =====================================================================
+   7. РЕНДЕР: ОЧЕРЕДЬ ЗАЯВОК (роль: эксперт бюро)
+   ===================================================================== */
+
+function getFilteredApplications() {
+  let list = state.applications;
+  if (state.filters.track !== 'all') {
+    list = list.filter((a) => a.track === state.filters.track);
+  }
+  if (state.filters.type !== 'all') {
+    list = list.filter((a) => a.examType === state.filters.type);
+  }
+  if (state.filters.search.trim()) {
+    const q = state.filters.search.trim().toLowerCase();
+    list = list.filter((a) => a.number.toLowerCase().includes(q));
+  }
+  const dir = state.sort.dir === 'asc' ? 1 : -1;
+  const trackOrder = { simplified: 0, full: 1, priority: 2 };
+  list = list.slice().sort((a, b) => {
+    if (state.sort.field === 'date') return (a.receivedDate - b.receivedDate) * dir;
+    if (state.sort.field === 'track') return (trackOrder[a.track] - trackOrder[b.track]) * dir;
+    return 0;
+  });
+  return list;
+}
+
+function renderQueueScreen() {
+  const filtered = getFilteredApplications();
+  const total = filtered.length;
+  const pageCount = Math.max(1, Math.ceil(total / CONFIG.PAGE_SIZE));
+  const page = Math.min(state.page, pageCount);
+  const pageItems = filtered.slice((page - 1) * CONFIG.PAGE_SIZE, page * CONFIG.PAGE_SIZE);
+
+  const simplifiedN = filtered.filter((a) => a.track === 'simplified').length;
+  const fullN = filtered.filter((a) => a.track === 'full').length;
+  const priorityN = filtered.filter((a) => a.track === 'priority').length;
+
+  const sortArrow = (field) => state.sort.field === field
+    ? `<span class="sort-arrow">${state.sort.dir === 'asc' ? '▲' : '▼'}</span>` : '';
+
+  return `
+    <h1 class="screen-title">Очередь заявок</h1>
+    <div class="panel">
+      <div class="filters-bar">
+        <div class="filter-field">
+          <label for="filter-track">Трек</label>
+          <select id="filter-track" data-action="filter-track">
+            <option value="all" ${state.filters.track === 'all' ? 'selected' : ''}>Все треки</option>
+            <option value="simplified" ${state.filters.track === 'simplified' ? 'selected' : ''}>Упрощённый</option>
+            <option value="full" ${state.filters.track === 'full' ? 'selected' : ''}>Полный</option>
+            <option value="priority" ${state.filters.track === 'priority' ? 'selected' : ''}>Приоритетный</option>
+          </select>
+        </div>
+        <div class="filter-field">
+          <label for="filter-type">Тип освидетельствования</label>
+          <select id="filter-type" data-action="filter-type">
+            <option value="all" ${state.filters.type === 'all' ? 'selected' : ''}>Все типы</option>
+            <option value="Первичное" ${state.filters.type === 'Первичное' ? 'selected' : ''}>Первичное</option>
+            <option value="Повторное" ${state.filters.type === 'Повторное' ? 'selected' : ''}>Повторное</option>
+          </select>
+        </div>
+        <div class="filter-field">
+          <label for="filter-search">Поиск по номеру заявки</label>
+          <input id="filter-search" type="search" data-action="filter-search" placeholder="2026-00001" value="${esc(state.filters.search)}">
+        </div>
+      </div>
+    </div>
+
+    <div class="summary-line">
+      <span>Всего заявок: <b data-countup="${total}" data-current-value="${total}">${total}</b></span>
+      <span class="sep">·</span>
+      <span>Упрощённый трек: <b data-countup="${simplifiedN}" data-current-value="${simplifiedN}">${simplifiedN}</b></span>
+      <span class="sep">·</span>
+      <span>Полный трек: <b data-countup="${fullN}" data-current-value="${fullN}">${fullN}</b></span>
+      <span class="sep">·</span>
+      <span>Приоритетные: <b data-countup="${priorityN}" data-current-value="${priorityN}">${priorityN}</b></span>
+    </div>
+
+    <div class="table-wrap">
+      <table class="queue-table">
+        <thead>
+          <tr>
+            <th>№ заявки</th>
+            <th class="sortable" data-action="sort" data-field="date" tabindex="0" role="button" aria-label="Сортировать по дате поступления">Дата поступления${sortArrow('date')}</th>
+            <th>Тип</th>
+            <th>Возрастная группа</th>
+            <th>Группа нозологий</th>
+            <th class="sortable" data-action="sort" data-field="track" tabindex="0" role="button" aria-label="Сортировать по треку">Назначенный трек${sortArrow('track')}</th>
+            <th>Статус</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${pageItems.map((a) => `
+            <tr data-action="open-card" data-id="${a.id}" tabindex="0" role="button" aria-label="Открыть заявку ${esc(a.number)}">
+              <td>${esc(a.number)}</td>
+              <td>${formatDate(a.receivedDate)}</td>
+              <td>${esc(a.examType)}</td>
+              <td>${esc(a.ageGroup)}</td>
+              <td>${esc(a.nosology)}</td>
+              <td>
+                <span class="badge ${trackBadgeClass(a)}">${trackBadgeText(a)}</span>
+                ${a.reasonCode === 'no-assessment'
+                  ? `<span class="no-assess-flag" title="Оценка не сформирована — недостаточно данных">i</span>` : ''}
+              </td>
+              <td>${esc(a.status)}</td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    </div>
+
+    <div class="pagination">
+      <button type="button" data-action="page" data-page="${page - 1}" ${page <= 1 ? 'disabled' : ''}>‹ Назад</button>
+      ${Array.from({ length: pageCount }, (_, i) => i + 1).map((p) => `
+        <button type="button" data-action="page" data-page="${p}" class="${p === page ? 'active' : ''}">${p}</button>
+      `).join('')}
+      <button type="button" data-action="page" data-page="${page + 1}" ${page >= pageCount ? 'disabled' : ''}>Вперёд ›</button>
+      <span class="page-info">Всего записей: ${total}</span>
+    </div>
+  `;
+}
+
+/* =====================================================================
+   8. РЕНДЕР: КАРТОЧКА ЗАЯВКИ (роль: эксперт бюро)
+   ===================================================================== */
+
+const FIELD_DEFS = [
+  ['Номер заявки', (a) => a.number],
+  ['Дата поступления', (a) => formatDate(a.receivedDate)],
+  ['Тип освидетельствования', (a) => a.examType],
+  ['Возрастная группа', (a) => a.ageGroup],
+  ['Группа нозологий', (a) => a.nosology],
+  ['Полнота пакета документов', (a) => a.packageCompleteness],
+  ['Результаты необходимых обследований', (a) => a.examinations],
+  ['Давность обследований', (a) => a.examAge],
+  ['Форма направления', (a) => a.referralForm],
+  ['Число медорганизаций в анамнезе', (a) => a.orgCount],
+  ['Предыдущие освидетельствования', (a) => a.prevExamStatus],
+  ['Противоречия в документах', (a) => a.contradictions],
+  ['Нормативное исключение', (a) => a.exclusion],
+];
+
+function docStatusMarkup(status) {
+  const cls = status === 'Обработан' ? 'status-ok' : status === 'Обработан частично' ? 'status-partial' : 'status-fail';
+  return `<span class="doc-status ${cls}"><span class="dot"></span>${esc(status)}</span>`;
+}
+
+function trackExplanationLine(a) {
+  if (a.track === 'priority') return 'Нормативно установленный сокращённый срок рассмотрения';
+  if (a.transferred) return 'Заявка переведена экспертом на полный трек; рассмотрение проводится в общем порядке';
+  if (a.reasonCode === 'no-assessment') return 'Рассмотрение в общем порядке. Оценка не сформирована — недостаточно данных';
+  if (a.track === 'simplified') return 'Рассмотрение проводится заочно в сокращённом порядке';
+  return 'Рассмотрение в общем порядке; при наличии оснований эксперт назначает очную форму';
+}
+
+function renderFactorsBlock(a) {
+  if (a.track === 'priority') {
+    return `<div class="priority-message">Трек назначен на основании нормативно установленного сокращённого срока рассмотрения. Скоринг не применялся.</div>`;
+  }
+  if (a.reasonCode === 'no-assessment') {
+    return `<div class="no-assess-message">Оценка не сформирована: недостаточно данных для анализа. Заявка направлена на полный трек.</div>`;
+  }
+  return a.factors.map((f) => `
+    <div class="factor-row">
+      <div class="factor-text">${esc(f.label)}</div>
+      <div class="factor-bar-axis">
+        <div class="factor-bar ${f.direction}" style="width:${f.barPercent / 2}%"></div>
+      </div>
+      <div class="factor-label ${f.direction}">${f.direction === 'positive' ? 'В пользу упрощённого рассмотрения' : 'Требует внимания'}</div>
+    </div>
+  `).join('');
+}
+
+function renderCardScreen() {
+  const a = state.applications.find((x) => x.id === state.selectedAppId);
+  if (!a) return `<p>Заявка не найдена.</p>`;
+  const processedCount = a.documents.filter((d) => d.status === 'Обработан').length;
+  const failedCount = a.documents.filter((d) => d.status === 'Не распознан').length;
+  const canTransfer = a.track === 'simplified' && !a.transferred;
+
+  return `
+    <div class="card-topbar">
+      <button type="button" class="btn" data-action="back-to-queue">‹ Вернуться к очереди</button>
+    </div>
+
+    <div class="panel">
+      <div class="card-header-block">
+        <div class="meta">
+          <div class="app-number">${esc(a.number)}</div>
+          <div class="app-date">Дата поступления: ${formatDate(a.receivedDate)}</div>
+        </div>
+        <span class="badge badge-lg ${trackBadgeClass(a)}">${trackBadgeText(a)}</span>
+      </div>
+      <div class="card-track-explain ${a.track === 'priority' ? 'priority-note' : ''}">${trackExplanationLine(a)}</div>
+    </div>
+
+    <div class="panel">
+      <h2 class="block-title">Сведения по заявке</h2>
+      <div class="field-grid">
+        ${FIELD_DEFS.map(([label, fn]) => `
+          <div class="field-row"><span class="field-name">${label}</span><span class="field-value">${esc(fn(a))}</span></div>
+        `).join('')}
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2 class="block-title">Приложенные документы</h2>
+      <div class="docs-summary">Документов: ${a.documents.length} · Обработано: ${processedCount} · Не распознано: ${failedCount}</div>
+      <table class="docs-table">
+        <thead>
+          <tr><th>Наименование</th><th>Формат</th><th>Дата</th><th>Объём (стр.)</th><th>Статус обработки</th></tr>
+        </thead>
+        <tbody>
+          ${a.documents.map((d, i) => `
+            <tr data-action="open-doc-stub" data-idx="${i}" tabindex="0" role="button" aria-label="Открыть документ ${esc(d.name)}">
+              <td>${esc(d.name)}</td>
+              <td>${esc(d.format)}</td>
+              <td>${formatDate(d.date)}</td>
+              <td>${d.pages}</td>
+              <td>${docStatusMarkup(d.status)}</td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    </div>
+
+    <div class="panel">
+      <h2 class="block-title">Факторы, повлиявшие на выбор трека</h2>
+      ${renderFactorsBlock(a)}
+      <div class="card-footnote">Модуль определяет порядок рассмотрения заявки. Решение по существу принимается экспертом.</div>
+    </div>
+
+    <div class="panel">
+      <h2 class="block-title">Действия</h2>
+      <button type="button" class="btn btn-primary" data-action="open-transfer-modal" data-id="${a.id}" ${canTransfer ? '' : 'disabled'}>
+        ${a.transferred ? 'Заявка переведена на полный трек' : 'Перевести на полный трек'}
+      </button>
+    </div>
+
+    ${renderStubPanel(a)}
+    ${renderTransferModal()}
+  `;
+}
+
+function renderStubPanel(a) {
+  const doc = state.stubPanelOpen !== false ? a.documents[state.stubPanelOpen] : null;
+  const open = state.stubPanelOpen !== false;
+  return `
+    <div class="stub-overlay ${open ? 'open' : ''}" data-action="close-stub"></div>
+    <div class="stub-panel ${open ? 'open' : ''}" role="dialog" aria-label="Просмотр документа" aria-hidden="${!open}">
+      <h3>${doc ? esc(doc.name) : ''}</h3>
+      <p>Просмотр документа доступен в основном интерфейсе ЕАВИИАС МСЭ.</p>
+      <div style="margin-top:auto;">
+        <button type="button" class="btn" data-action="close-stub">Закрыть</button>
+      </div>
+    </div>
+  `;
+}
+
+function renderTransferModal() {
+  const open = state.transferModalAppId !== null;
+  return `
+    <div class="modal-overlay ${open ? 'open' : ''}" role="dialog" aria-modal="true" aria-hidden="${!open}">
+      <div class="modal-box">
+        <h3>Перевод заявки на полный трек</h3>
+        <label for="transfer-reason">Причина перевода</label>
+        <select id="transfer-reason">
+          <option value="требуется дообследование">Требуется дообследование</option>
+          <option value="неполнота сведений">Неполнота сведений</option>
+          <option value="выявлены противоречия">Выявлены противоречия</option>
+          <option value="иное">Иное</option>
+        </select>
+        <div class="modal-actions">
+          <button type="button" class="btn" data-action="close-transfer-modal">Отмена</button>
+          <button type="button" class="btn btn-primary" data-action="confirm-transfer">Подтвердить перевод</button>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+/* =====================================================================
+   9. РЕНДЕР: МОНИТОРИНГ (роль: руководитель бюро) + SVG-визуализации
+   ===================================================================== */
+
+function getPeriodDaysLimit(period) {
+  return period === 'week' ? 7 : period === 'month' ? 30 : 90;
+}
+
+function getMonitoringApps() {
+  const limit = getPeriodDaysLimit(state.monitoringPeriod);
+  return state.applications.filter((a) => a.receivedDaysAgo <= limit);
+}
+
+function svgSparkline(values, width, height, color) {
+  const min = Math.min(...values), max = Math.max(...values);
+  const range = max - min || 1;
+  const step = width / (values.length - 1);
+  const points = values.map((v, i) => `${(i * step).toFixed(1)},${(height - ((v - min) / range) * (height - 4) - 2).toFixed(1)}`).join(' ');
+  return `<svg width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" role="img" aria-label="Динамика за 8 периодов">
+    <polyline points="${points}" fill="none" stroke="${color}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+  </svg>`;
+}
+
+function renderDistributionBar(counts, total) {
+  const segs = [
+    { key: 'simplified', label: 'Упрощённый трек', color: 'var(--track-simplified)', value: counts.simplified },
+    { key: 'fullOffsite', label: 'Полный трек, заочно', color: '#8B96A3', value: counts.fullOffsite },
+    { key: 'fullOnsite', label: 'Полный трек, очно', color: 'var(--track-full)', value: counts.fullOnsite },
+    { key: 'priority', label: 'Приоритетные (нормативные)', color: 'var(--track-priority)', value: counts.priority },
+  ];
+  return `
+    <div class="dist-bar-wrap">
+      <div class="dist-bar">
+        ${segs.map((s) => `<div class="dist-seg" style="width:${total ? (s.value / total * 100) : 0}%;background:${s.color}" title="${s.label}: ${s.value} заявок (${total ? (s.value / total * 100).toFixed(1) : 0}%)"></div>`).join('')}
+      </div>
+      <div class="dist-legend">
+        ${segs.map((s) => `<span class="item"><span class="swatch" style="background:${s.color}"></span>${s.label} — ${total ? (s.value / total * 100).toFixed(1) : 0}% (${s.value})</span>`).join('')}
+      </div>
+    </div>
+  `;
+}
+
+function renderDurationBlock() {
+  const stats = state.durationStats[state.monitoringPeriod];
+  const rows = [
+    { key: 'simplified', label: 'Упрощённый трек', color: 'var(--track-simplified)', benchmark: CONFIG.DURATION_BENCHMARKS.simplified },
+    { key: 'fullOffsite', label: 'Полный трек, заочно', color: '#8B96A3', benchmark: CONFIG.DURATION_BENCHMARKS.fullOffsite },
+    { key: 'fullOnsite', label: 'Полный трек, очно', color: 'var(--track-full)', benchmark: CONFIG.DURATION_BENCHMARKS.fullOnsite },
+  ];
+  const maxScale = Math.max(...rows.map((r) => Math.max(stats[r.key].avg, r.benchmark))) * 1.15;
+  return rows.map((r) => {
+    const s = stats[r.key];
+    return `
+      <div class="duration-row">
+        <div class="duration-label">${r.label}</div>
+        <div>
+          <div class="duration-bar-track">
+            <div class="duration-bar-fill" style="width:${(s.avg / maxScale * 100).toFixed(1)}%;background:${r.color}"></div>
+            <div class="duration-benchmark" style="left:${(r.benchmark / maxScale * 100).toFixed(1)}%" title="Ориентир: ${r.benchmark} дн."></div>
+          </div>
+          <div class="sparkline-cell" data-sparkline="${r.key}" data-values="${s.sparkline.map((v) => v.toFixed(2)).join(',')}" data-color="${r.color}"></div>
+        </div>
+        <div class="duration-value">${s.avg} раб. дн.<span class="benchmark-note">ориентир ${r.benchmark} дн.</span></div>
+      </div>
+    `;
+  }).join('');
+}
+
+function initSparklines() {
+  document.querySelectorAll('[data-sparkline]').forEach((el) => {
+    const values = el.dataset.values.split(',').map(Number);
+    el.innerHTML = svgSparkline(values, 220, 28, el.dataset.color.startsWith('var') ? getComputedStyle(document.documentElement).getPropertyValue(el.dataset.color.slice(4, -1)) || '#5B6B7B' : el.dataset.color);
+  });
+}
+
+function renderQualityBlock() {
+  const monitoringApps = getMonitoringApps();
+  const simplifiedTotal = monitoringApps.filter((a) => a.track === 'simplified' || (a.transferred)).length
+    + state.applications.filter((a) => a.transferred && a.receivedDaysAgo > getPeriodDaysLimit(state.monitoringPeriod)).length * 0;
+  const simplifiedBase = state.applications.filter((a) => a.track === 'simplified').length;
+  const transferredCount = state.applications.filter((a) => a.transferred).length;
+  const transferRate = simplifiedBase ? transferredCount / simplifiedBase : 0;
+  const overLimit = transferRate > CONFIG.TRANSFER_RATE_LIMIT;
+
+  const reviewRate = CONFIG.REVIEW_RATE_STATIC;
+  const reviewOver = reviewRate > CONFIG.REVIEW_RATE_LIMIT;
+
+  const renderIndicator = (title, value, limit, over, note) => `
+    <div class="quality-card ${over ? 'warning' : ''}">
+      <div class="q-title">${title}</div>
+      <div class="q-value">${(value * 100).toFixed(1)}%</div>
+      <div class="q-progress-track">
+        <div class="q-progress-fill" style="width:${Math.min(100, value / (limit * 1.6) * 100).toFixed(1)}%"></div>
+        <div class="q-limit-marker" style="left:${Math.min(100, limit / (limit * 1.6) * 100).toFixed(1)}%" title="Граница нормы: ${(limit * 100).toFixed(0)}%"></div>
+      </div>
+      <div class="q-note ${over ? 'warning-note' : ''}">${over ? `Превышена граница нормы (не более ${(limit * 100).toFixed(0)}%). ${note}` : `Граница нормы: не более ${(limit * 100).toFixed(0)}%`}</div>
+    </div>
+  `;
+
+  return `
+    <div class="quality-grid">
+      ${renderIndicator('Доля дел, переведённых экспертом с упрощённого трека на полный', transferRate, CONFIG.TRANSFER_RATE_LIMIT, overLimit, 'Рекомендуется проверить причины переводов.')}
+      ${renderIndicator('Доля дел упрощённого трека с пересмотренным решением', reviewRate, CONFIG.REVIEW_RATE_LIMIT, reviewOver, '')}
+    </div>
+  `;
+}
+
+function renderEventsBlock() {
+  return `
+    <div class="events-explain">Журнал фиксирует все назначения треков и действия экспертов. При автоматической маршрутизации журнал является основным источником контроля качества.</div>
+    ${state.events.map((e, i) => `
+      <div class="event-row ${i === 0 && e.isNew ? 'new-event' : ''}">
+        <div class="event-time">${formatDateTime(e.time)}</div>
+        <div class="event-type">${esc(e.type)}</div>
+        <div class="event-num">${esc(e.number)}</div>
+        <div class="event-desc">${esc(e.description)}</div>
+      </div>
+    `).join('')}
+  `;
+}
+
+function renderMonitoringScreen() {
+  const monitoringApps = getMonitoringApps();
+  const total = monitoringApps.length;
+  const simplifiedN = monitoringApps.filter((a) => a.track === 'simplified').length;
+  const fullApps = monitoringApps.filter((a) => a.track === 'full');
+  const fullN = fullApps.length;
+  const priorityN = monitoringApps.filter((a) => a.track === 'priority').length;
+  const fullOffsiteN = fullApps.filter((a) => a.form === 'заочно').length;
+  const fullOnsiteN = fullApps.filter((a) => a.form === 'очно').length;
+  const transferredInPeriod = state.applications.filter((a) => a.transferred).length;
+  const simplifiedBase = state.applications.filter((a) => a.track === 'simplified').length;
+
+  const periodLabel = { week: 'неделю', month: 'месяц', quarter: 'квартал' }[state.monitoringPeriod];
+
+  return `
+    <h1 class="screen-title">Мониторинг</h1>
+    <div class="monitor-controls">
+      <div class="period-switch" role="group" aria-label="Период">
+        <button type="button" data-action="set-period" data-period="week" class="${state.monitoringPeriod === 'week' ? 'active' : ''}">Неделя</button>
+        <button type="button" data-action="set-period" data-period="month" class="${state.monitoringPeriod === 'month' ? 'active' : ''}">Месяц</button>
+        <button type="button" data-action="set-period" data-period="quarter" class="${state.monitoringPeriod === 'quarter' ? 'active' : ''}">Квартал</button>
+      </div>
+      <div class="threshold-line">Порог маршрутизации: 0,82 · установлен ${CONFIG.THRESHOLD_SET_DATE} · изменяется администратором системы</div>
+    </div>
+
+    <div class="panel">
+      <h2 class="block-title">Поток и распределение</h2>
+      <div class="tiles-row">
+        <div class="tile">
+          <div class="tile-label">Поступило заявок за ${periodLabel}</div>
+          <div class="tile-value" data-countup="${total}" data-current-value="0">0</div>
+        </div>
+        <div class="tile">
+          <div class="tile-label">Направлено на упрощённый трек</div>
+          <div class="tile-value" data-countup="${simplifiedN}" data-current-value="0">0</div>
+          <div class="tile-sub">${total ? (simplifiedN / total * 100).toFixed(1) : 0}% от потока</div>
+        </div>
+        <div class="tile">
+          <div class="tile-label">Направлено на полный трек</div>
+          <div class="tile-value" data-countup="${fullN}" data-current-value="0">0</div>
+          <div class="tile-sub">${total ? (fullN / total * 100).toFixed(1) : 0}% от потока</div>
+        </div>
+      </div>
+      ${renderDistributionBar({ simplified: simplifiedN, fullOffsite: fullOffsiteN, fullOnsite: fullOnsiteN, priority: priorityN }, total)}
+      <div class="tiles-row" style="grid-template-columns:1fr;margin-top:16px;">
+        <div class="tile">
+          <div class="tile-label">Переведено с упрощённого на полный (за месяц, накопительно)</div>
+          <div class="tile-value" data-countup="${transferredInPeriod}" data-current-value="0">0</div>
+          <div class="tile-sub">${simplifiedBase ? (transferredInPeriod / simplifiedBase * 100).toFixed(1) : 0}% от заявок упрощённого трека</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2 class="block-title">Сроки рассмотрения</h2>
+      ${renderDurationBlock()}
+    </div>
+
+    <div class="panel">
+      <h2 class="block-title">Контроль качества</h2>
+      ${renderQualityBlock()}
+    </div>
+
+    <div class="panel">
+      <h2 class="block-title">Лента событий</h2>
+      ${renderEventsBlock()}
+    </div>
+  `;
+}
+
+/* =====================================================================
+   10. ОБРАБОТЧИКИ СОБЫТИЙ
+   ===================================================================== */
+
+function attachHandlers() {
+  const root = document.getElementById('app-root');
+
+  root.querySelectorAll('[data-action="set-role"]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const role = btn.dataset.role;
+      if (role === state.role) return;
+      state.role = role;
+      state.screen = 'queue';
+      state.selectedAppId = null;
+      render();
+      showToast('info', role === 'head' ? 'Режим: Руководитель бюро' : 'Режим: Эксперт бюро');
+    });
+  });
+
+  root.querySelectorAll('[data-action="open-card"]').forEach((row) => {
+    const open = () => { state.selectedAppId = Number(row.dataset.id); state.screen = 'card'; state.stubPanelOpen = false; render(); };
+    row.addEventListener('click', open);
+    row.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(); } });
+  });
+
+  const back = root.querySelector('[data-action="back-to-queue"]');
+  if (back) back.addEventListener('click', () => { state.screen = 'queue'; render(); });
+
+  const trackSel = root.querySelector('[data-action="filter-track"]');
+  if (trackSel) trackSel.addEventListener('change', () => { state.filters.track = trackSel.value; state.page = 1; render(); });
+
+  const typeSel = root.querySelector('[data-action="filter-type"]');
+  if (typeSel) typeSel.addEventListener('change', () => { state.filters.type = typeSel.value; state.page = 1; render(); });
+
+  const searchInput = root.querySelector('[data-action="filter-search"]');
+  if (searchInput) {
+    searchInput.addEventListener('input', () => { state.filters.search = searchInput.value; state.page = 1; render(); searchInput.focus(); searchInput.setSelectionRange(searchInput.value.length, searchInput.value.length); });
+  }
+
+  root.querySelectorAll('[data-action="sort"]').forEach((th) => {
+    const doSort = () => {
+      const field = th.dataset.field;
+      if (state.sort.field === field) state.sort.dir = state.sort.dir === 'asc' ? 'desc' : 'asc';
+      else { state.sort.field = field; state.sort.dir = 'desc'; }
+      render();
+    };
+    th.addEventListener('click', doSort);
+    th.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); doSort(); } });
+  });
+
+  root.querySelectorAll('[data-action="page"]').forEach((btn) => {
+    btn.addEventListener('click', () => { state.page = Number(btn.dataset.page); render(); });
+  });
+
+  root.querySelectorAll('[data-action="open-doc-stub"]').forEach((row) => {
+    const open = () => { state.stubPanelOpen = Number(row.dataset.idx); render(); };
+    row.addEventListener('click', open);
+    row.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(); } });
+    row.addEventListener('click', () => showToast('info', 'Просмотр документа доступен в основном интерфейсе ЕАВИИАС МСЭ'));
+  });
+  root.querySelectorAll('[data-action="close-stub"]').forEach((el) => {
+    el.addEventListener('click', () => { state.stubPanelOpen = false; render(); });
+  });
+
+  const openTransferBtn = root.querySelector('[data-action="open-transfer-modal"]');
+  if (openTransferBtn) openTransferBtn.addEventListener('click', () => { state.transferModalAppId = Number(openTransferBtn.dataset.id); render(); });
+  root.querySelectorAll('[data-action="close-transfer-modal"]').forEach((btn) => {
+    btn.addEventListener('click', () => { state.transferModalAppId = null; render(); });
+  });
+  const confirmBtn = root.querySelector('[data-action="confirm-transfer"]');
+  if (confirmBtn) confirmBtn.addEventListener('click', () => {
+    const reasonSelect = document.getElementById('transfer-reason');
+    const reason = reasonSelect ? reasonSelect.value : 'иное';
+    const app = state.applications.find((a) => a.id === state.transferModalAppId);
+    if (app) {
+      app.transferred = true;
+      app.status = 'Переведена на полный трек';
+      app.transferReason = reason;
+      app.transferDate = new Date();
+      state.events.unshift({
+        time: new Date(),
+        type: 'Эксперт перевёл заявку на полный трек',
+        number: app.number,
+        description: `Причина: ${reason}`,
+        isNew: true,
+      });
+      state.events = state.events.slice(0, CONFIG.EVENTS_VISIBLE);
+      state.transferModalAppId = null;
+      render();
+      showToast('success', `Заявка № ${app.number} переведена на полный трек`);
+
+      const simplifiedBase = state.applications.filter((a) => a.track === 'simplified').length;
+      const transferredCount = state.applications.filter((a) => a.transferred).length;
+      const rate = simplifiedBase ? transferredCount / simplifiedBase : 0;
+      if (rate > CONFIG.TRANSFER_RATE_LIMIT) {
+        showToast('warning', `Доля переводов превысила границу нормы — ${(rate * 100).toFixed(1)}%`);
+      }
+    }
+  });
+
+  root.querySelectorAll('[data-action="set-period"]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      state.monitoringPeriod = btn.dataset.period;
+      render();
+      const label = { week: 'неделя', month: 'месяц', quarter: 'квартал' }[state.monitoringPeriod];
+      showToast('info', `Показатели пересчитаны за период: ${label}`);
+    });
+  });
+}
+
+/* =====================================================================
+   11. ИНИЦИАЛИЗАЦИЯ
+   ===================================================================== */
+
+render();
+
+</script>
