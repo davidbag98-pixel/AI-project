@@ -1,4 +1,4 @@
-<title>ЕАВИИАС МСЭ — Заявки на МСЭ</title>
+<title>ЕАВИИАС МСЭ — Заявления на МСЭ</title>
 <meta name="description" content="Интерактивный прототип модуля автоматической маршрутизации заявок на медико-социальную экспертизу">
 <style>
   :root{
@@ -10,11 +10,11 @@
     --text-secondary:#5B6B7B;
     --track-simplified:#1E7A5F;
     --track-full:#6B7785;
-    --track-priority:#B35309;
+    --amber:#B35309;
     --warning:#A32E2E;
     --track-simplified-bg:#E4F1EC;
     --track-full-bg:#E9ECEF;
-    --track-priority-bg:#FBEBD9;
+    --amber-bg:#FBEBD9;
     --warning-bg:#F7E5E5;
   }
   *{box-sizing:border-box;}
@@ -128,7 +128,8 @@
   .badge{display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:3px;font-size:12.5px;font-weight:600;white-space:nowrap;}
   .badge.badge-simplified{background:var(--track-simplified-bg);color:var(--track-simplified);}
   .badge.badge-full{background:var(--track-full-bg);color:var(--track-full);}
-  .badge.badge-priority{background:var(--track-priority-bg);color:var(--track-priority);}
+  .badge.badge-deadline-reduced{background:var(--amber-bg);color:var(--amber);}
+  .deadline-badge-icon{margin-right:1px;}
   .badge.badge-lg{font-size:15px;padding:6px 14px;}
   .no-assess-flag{
     display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;border-radius:50%;
@@ -143,7 +144,7 @@
   .pagination button:disabled{opacity:.4;cursor:default;}
   .pagination .page-info{color:var(--text-secondary);margin-left:8px;}
 
-  /* ===== Карточка заявки ===== */
+  /* ===== Карточка заявления ===== */
   .card-topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
   .btn{
     border:1px solid var(--border);background:#fff;border-radius:3px;padding:8px 16px;font-size:13px;font-weight:600;
@@ -160,7 +161,7 @@
   .card-header-block .app-number{font-size:20px;font-weight:700;margin:0;}
   .card-header-block .app-date{color:var(--text-secondary);font-size:13px;}
   .card-track-explain{margin-top:10px;color:var(--text-secondary);font-size:13px;}
-  .card-track-explain.priority-note{color:var(--track-priority);}
+  .card-track-explain.deadline-reduced-note{color:var(--amber);}
   .track-badge-wrap{display:flex;flex-direction:column;align-items:flex-end;gap:5px;}
   .track-badge-label{font-size:11px;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.04em;}
 
@@ -179,7 +180,7 @@
   .doc-status{display:inline-flex;align-items:center;gap:6px;font-weight:600;font-size:12.5px;}
   .doc-status .dot{width:8px;height:8px;border-radius:50%;display:inline-block;}
   .doc-status.status-ok .dot{background:var(--track-simplified);}
-  .doc-status.status-partial .dot{background:var(--track-priority);}
+  .doc-status.status-partial .dot{background:var(--amber);}
   .doc-status.status-fail .dot{background:var(--warning);}
   .docs-summary{color:var(--text-secondary);font-size:13px;margin-bottom:10px;}
   table.docs-table tbody tr.key-doc-issue{background:var(--warning-bg);}
@@ -195,7 +196,7 @@
   .factors-legend{display:flex;gap:24px;margin-top:14px;flex-wrap:wrap;}
   .factors-legend .legend-item{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--text-secondary);}
   .factors-legend .factor-icon{width:16px;height:16px;}
-  .no-assess-message,.priority-message{
+  .no-assess-message{
     background:#F0F3F5;border:1px solid var(--border);border-radius:3px;padding:14px;font-size:13px;color:var(--text);
   }
 
@@ -315,7 +316,7 @@ const CONFIG = {
   PAGE_SIZE: 25,
   THRESHOLD: 0.82,                // порог маршрутизации (см. раздел 4, шаг 4 ТЗ)
   THRESHOLD_SET_DATE: '12.03.2026',
-  PRE_TRANSFERRED_COUNT: 2,       // заявки упрощённого трека, "уже переведённые" ранее в отчётном месяце (исходное состояние демо)
+  PRE_TRANSFERRED_COUNT: 2,       // заявления упрощённого трека, "уже переведённые" ранее в отчётном месяце (исходное состояние демо)
   TRANSFER_RATE_LIMIT: 0.08,      // граница нормы: доля переводов упрощённый → полный
   REVIEW_RATE_LIMIT: 0.03,        // граница нормы: доля пересмотренных решений упрощённого трека
   REVIEW_RATE_STATIC: 0.012,      // статичный показатель для демонстрации (вне интерактивного сценария)
@@ -326,7 +327,7 @@ const CONFIG = {
 
 // Веса формулы скоринга (раздел 4, шаг 3 ТЗ). Базовое значение S = 0.50.
 // Примечание: «Форма направления» исключена из формулы по решению заказчика —
-// поле остаётся в данных заявки и в правиле отказа от оценки (см. Шаг 2),
+// поле остаётся в данных заявления и в правиле отказа от оценки (см. Шаг 2),
 // но больше не влияет на балл и не показывается как фактор.
 const SCORE_BASE = 0.50;
 const SCORE_WEIGHTS = {
@@ -378,7 +379,7 @@ const GEN_PROBABILITIES = {
   pkg: [['Полный', 0.46], ['Есть замечания', 0.50], ['Неполный', 0.04]],
   // "Достаточность обследований" больше не имеет значения "Отсутствуют" — этот
   // случай теперь целиком покрывается "Неполный" пакет документов (см. Шаг 2).
-  // Условной завязки на Неполный не требуется: такая заявка в любом случае
+  // Условной завязки на Неполный не требуется: такое заявление в любом случае
   // уходит в отказ от оценки по признаку пакета документов, до расчёта балла.
   examIfPolny: [['В полном объёме', 0.85], ['Частично, требуется дообследование', 0.15]],
   examIfOther: [['В полном объёме', 0.50], ['Частично, требуется дообследование', 0.50]],
@@ -393,7 +394,7 @@ const GEN_PROBABILITIES = {
   ],
 };
 
-// Человеческие формулировки факторов для карточки заявки (раздел 4, шаг 5 ТЗ).
+// Человеческие формулировки факторов для карточки заявления (раздел 4, шаг 5 ТЗ).
 // Примечание разработчика: в карточке в качестве объясняющих факторов
 // используются только признаки, связанные с документами и процедурой
 // (полнота пакета, обследования, повторность, число медорганизаций,
@@ -477,7 +478,7 @@ const OTHER_DOC_STATUS_PROBS = [['Распознан', 0.80], ['Распозна
 // Тексты для случаев, когда модель отказывается формировать оценку (Шаг 2 ТЗ).
 // Причина конкретизируется — эксперту важно понимать, чего именно не хватает.
 const NO_ASSESSMENT_MESSAGES = {
-  'insufficient-data': 'Оценка не сформирована: недостаточно данных для анализа. Заявка направлена на полный трек.',
+  'insufficient-data': 'Оценка не сформирована: недостаточно данных для анализа. Заявление направлено на полный трек.',
   'diagnosis-mismatch': 'Оценка не сформирована: расхождение в основном диагнозе между документами.',
   'key-docs-unrecognized': 'Оценка не сформирована: документы распознаны не полностью.',
 };
@@ -650,7 +651,7 @@ function scoreApplication(app) {
   return Math.min(0.98, Math.max(0.02, s));
 }
 
-// Полный перечень факторов маршрутизации заявки — не только сильнейшие по
+// Полный перечень факторов маршрутизации заявления — не только сильнейшие по
 // модулю вклада, а весь набор признаков, которые модель принимает во внимание
 // (за вычетом нозологии и возрастной группы — см. примечание к FACTOR_LABELS).
 // Порядок фиксированный — совпадает с порядком применения признаков в
@@ -679,38 +680,40 @@ function computeFactors(app) {
   return factors;
 }
 
-// Порядок применения строго последовательный (раздел 4 ТЗ):
-// нормативное исключение → проверка возможности оценки (в т.ч. новые условия
-// по согласованности диагноза и распознаванию ключевых документов) → скоринг.
+// Срок рассмотрения (deadlineType) и трек обработки (track) — независимые
+// измерения. Нормативное исключение задаёт только срок и не прерывает и не
+// подменяет собой дальнейший расчёт: возможность оценки и скоринг применяются
+// к таким заявлениям наравне со всеми остальными (раздел 4 ТЗ, версия 2).
+// Порядок: (1) срок по нормативному исключению → (2) проверка возможности
+// оценки (в т.ч. согласованность диагноза и распознавание ключевых
+// документов) → (3) скоринг → (4) трек по порогу.
 function assignTrack(app) {
-  if (app.exclusion !== 'Нет') {
-    return { track: 'priority', reasonCode: 'normative' };
-  }
+  const deadlineType = app.exclusion !== 'Нет' ? 'reduced' : 'normal';
   if (
     app.packageCompleteness === 'Неполный' ||
     (app.contradictions === 'Выявлены' && app.referralForm === 'Скан-копия')
   ) {
-    return { track: 'full', reasonCode: 'no-assessment', noAssessmentReason: 'insufficient-data' };
+    return { track: 'full', deadlineType, reasonCode: 'no-assessment', noAssessmentReason: 'insufficient-data' };
   }
   if (app.diagnosisConsistency === 'Расхождение в основном диагнозе') {
-    return { track: 'full', reasonCode: 'no-assessment', noAssessmentReason: 'diagnosis-mismatch' };
+    return { track: 'full', deadlineType, reasonCode: 'no-assessment', noAssessmentReason: 'diagnosis-mismatch' };
   }
   const keyDocsUnrecognized = app.documents.some(
     (d) => KEY_DOC_NAMES.includes(d.name) && d.status !== 'Распознан'
   );
   if (keyDocsUnrecognized) {
-    return { track: 'full', reasonCode: 'no-assessment', noAssessmentReason: 'key-docs-unrecognized' };
+    return { track: 'full', deadlineType, reasonCode: 'no-assessment', noAssessmentReason: 'key-docs-unrecognized' };
   }
   const score = scoreApplication(app);
   if (score >= CONFIG.THRESHOLD) {
-    return { track: 'simplified', reasonCode: 'score', score };
+    return { track: 'simplified', deadlineType, reasonCode: 'score', score };
   }
-  return { track: 'full', reasonCode: 'score', score };
+  return { track: 'full', deadlineType, reasonCode: 'score', score };
 }
 
-// Статус рассмотрения заявки — самостоятельное измерение, не связанное с
+// Статус рассмотрения заявления — самостоятельное измерение, не связанное с
 // треком: "Ожидает рассмотрения" / "На рассмотрении" / "Принято решение".
-// Только заявки со статусом "Ожидает рассмотрения" открываются в карточке —
+// Только заявления со статусом "Ожидает рассмотрения" открываются в карточке —
 // это единственный статус, за который в прототипе отвечает данный модуль
 // (сам ход рассмотрения и формирование протокола — вне периметра работы).
 const REVIEW_STATUS = {
@@ -723,14 +726,12 @@ const REVIEW_STATUS = {
 // по ходу рассмотрения, а не по алфавиту.
 const REVIEW_STATUS_LIST = [REVIEW_STATUS.PENDING, REVIEW_STATUS.IN_REVIEW, REVIEW_STATUS.DECIDED];
 const STATUS_SORT_ORDER = { [REVIEW_STATUS.PENDING]: 0, [REVIEW_STATUS.IN_REVIEW]: 1, [REVIEW_STATUS.DECIDED]: 2 };
-// Возрастная группа сортируется по возрасту, а не по алфавиту (иначе "до 18"
-// оказалась бы после "60 и старше" — цифры в начале строки сортируются раньше букв).
-const AGE_GROUP_SORT_ORDER = { 'до 18': 0, '18–44': 1, '45–59': 2, '60 и старше': 3 };
+const DEADLINE_SORT_ORDER = { normal: 0, reduced: 1 };
 
-// "Ожидает рассмотрения" — подавляющее большинство (~70%), чтобы кликабельную
-// заявку в демонстрации не приходилось долго искать. Остаток распределён между
-// "На рассмотрении" и "Принято решение" со сдвигом по давности заявки (чем
-// "старше" заявка, тем выше шанс, что решение уже принято).
+// "Ожидает рассмотрения" — подавляющее большинство (~70%), чтобы кликабельное
+// заявление в демонстрации не приходилось долго искать. Остаток распределён между
+// "На рассмотрении" и "Принято решение" со сдвигом по давности заявления (чем
+// "старше" заявление, тем выше шанс, что решение уже принято).
 function pickReviewStatus(rng, daysAgo) {
   if (daysAgo <= 9) {
     return weightedChoice(rng, [
@@ -817,7 +818,7 @@ function generateDocuments(rng, app, refDate) {
   }
 
   // Согласованность: "Неполный" пакет → 1-2 документа помечаются как "не распознан"
-  // (сам по себе Шаг 2 уже отправляет такую заявку на полный трек по причине
+  // (сам по себе Шаг 2 уже отправляет такое заявление на полный трек по причине
   // неполноты пакета — это лишь визуальное подтверждение в таблице документов)
   if (app.packageCompleteness === 'Неполный') {
     const eligible = docs.filter((d) => d.name !== DOC_NAMES.consent);
@@ -870,17 +871,17 @@ function buildApplication(index, rng, today) {
 
   const assignment = assignTrack(app);
   app.track = assignment.track;
+  app.deadlineType = assignment.deadlineType;
   app.reasonCode = assignment.reasonCode;
   app.noAssessmentReason = assignment.noAssessmentReason || null;
-  app.factors = assignment.track !== 'priority' && assignment.reasonCode !== 'no-assessment'
-    ? computeFactors(app) : [];
+  app.factors = assignment.reasonCode !== 'no-assessment' ? computeFactors(app) : [];
 
   app.form = app.track === 'full' ? weightedChoice(rng, GEN_PROBABILITIES.onsiteForm) : null;
 
   // Статус рассмотрения не зависит от трека и не меняется переводом на полный
   // трек (перевод — это смена трека, а не стадии рассмотрения). Чем "старше"
-  // заявка в пределах отчётного месяца, тем выше шанс, что она уже в работе
-  // или по ней принято решение.
+  // заявление в пределах отчётного месяца, тем выше шанс, что оно уже в работе
+  // или по нему принято решение.
   app.status = pickReviewStatus(rng, app.receivedDaysAgo);
   app.transferred = false;
   app.transferReason = null;
@@ -911,10 +912,15 @@ function computeFlowStatsFromList(apps) {
   const total = apps.length;
   const simplified = apps.filter((a) => a.track === 'simplified').length;
   const fullApps = apps.filter((a) => a.track === 'full');
-  const priority = apps.filter((a) => a.track === 'priority').length;
+  const reducedApps = apps.filter((a) => a.deadlineType === 'reduced');
   const fullOffsite = fullApps.filter((a) => a.form === 'заочно').length;
   const fullOnsite = fullApps.filter((a) => a.form === 'очно').length;
-  return { total, simplified, full: fullApps.length, priority, fullOffsite, fullOnsite };
+  return {
+    total, simplified, full: fullApps.length, fullOffsite, fullOnsite,
+    reduced: reducedApps.length,
+    reducedSimplified: reducedApps.filter((a) => a.track === 'simplified').length,
+    reducedFull: reducedApps.filter((a) => a.track === 'full').length,
+  };
 }
 
 // "Квартал" не может быть выборкой из тех же 240 заявок — весь датасет
@@ -926,14 +932,20 @@ function buildScaledFlowStats(rng, monthStats, scaleBase, scaleJitter) {
   const scale = scaleBase + (rng() - 0.5) * scaleJitter;
   const total = Math.round(monthStats.total * scale);
   const simplifiedShare = Math.min(0.32, Math.max(0.20, monthStats.simplified / monthStats.total + (rng() - 0.5) * 0.03));
-  const priorityShare = Math.min(0.07, Math.max(0.03, monthStats.priority / monthStats.total + (rng() - 0.5) * 0.015));
   const simplified = Math.round(total * simplifiedShare);
-  const priority = Math.round(total * priorityShare);
-  const full = total - simplified - priority;
+  const full = total - simplified;
   const onsiteShare = Math.min(0.45, Math.max(0.20, CONFIG.ONSITE_SHARE + (rng() - 0.5) * 0.06));
   const fullOnsite = Math.round(full * onsiteShare);
   const fullOffsite = full - fullOnsite;
-  return { total, simplified, full, priority, fullOffsite, fullOnsite };
+  // Доля с сокращённым сроком удерживается около фактической (см. GEN_PROBABILITIES.exclusion,
+  // суммарно ~5%); смешанное распределение по трекам внутри группы берётся из той же доли
+  // упрощённого трека, что и по потоку в целом — так синтетическая сводка не рисует
+  // 100% на одном треке.
+  const reducedShare = Math.min(0.07, Math.max(0.03, monthStats.reduced / monthStats.total + (rng() - 0.5) * 0.015));
+  const reduced = Math.round(total * reducedShare);
+  const reducedSimplified = Math.round(reduced * simplifiedShare);
+  const reducedFull = reduced - reducedSimplified;
+  return { total, simplified, full, fullOffsite, fullOnsite, reduced, reducedSimplified, reducedFull };
 }
 
 function generateDataset() {
@@ -973,18 +985,18 @@ function generateDataset() {
     const dt = new Date(a.receivedDate);
     dt.setHours(a.receivedTime.h, a.receivedTime.m, 0, 0);
     let category, description;
-    if (a.track === 'priority') {
-      category = 'Приоритет';
-      description = 'Заявка направлена по нормативному приоритету';
-    } else if (a.reasonCode === 'no-assessment') {
+    if (a.reasonCode === 'no-assessment') {
       category = 'Отказ от оценки';
       description = `Оценка не сформирована: ${NO_ASSESSMENT_EVENT_REASON[a.noAssessmentReason]}`;
     } else if (a.track === 'simplified') {
       category = 'Назначение трека';
-      description = 'Заявка направлена на упрощённый трек';
+      description = 'Заявление направлено на упрощённый трек';
     } else {
       category = 'Назначение трека';
-      description = 'Заявка направлена на полный трек';
+      description = 'Заявление направлено на полный трек';
+    }
+    if (a.deadlineType === 'reduced') {
+      description += ` · Срок сокращён: ${lowerFirst(a.exclusion)}`;
     }
     events.push({ time: dt, appId: a.id, appNumber: a.number, category, description, expert: null });
     if (a.transferred) {
@@ -1023,15 +1035,17 @@ const dataset = generateDataset();
   const count = (pred) => apps.filter(pred).length;
   const pct = (n) => (total ? (n / total * 100).toFixed(1) + '%' : '0%');
   const simplified = count((a) => a.track === 'simplified');
-  const priority = count((a) => a.track === 'priority');
+  const reduced = count((a) => a.deadlineType === 'reduced');
+  const reducedSimplified = count((a) => a.deadlineType === 'reduced' && a.track === 'simplified');
+  const reducedFull = count((a) => a.deadlineType === 'reduced' && a.track === 'full');
   const noAssessment = count((a) => a.reasonCode === 'no-assessment');
   const insufficientData = count((a) => a.noAssessmentReason === 'insufficient-data');
   const diagnosisMismatch = count((a) => a.noAssessmentReason === 'diagnosis-mismatch');
   const keyDocsIssue = count((a) => a.noAssessmentReason === 'key-docs-unrecognized');
   const diagnosisMismatchShare = count((a) => a.diagnosisConsistency === 'Расхождение в основном диагнозе');
-  console.log('[ЕАВИИАС МСЭ] Фактические доли по датасету (' + total + ' заявок):');
+  console.log('[ЕАВИИАС МСЭ] Фактические доли по датасету (' + total + ' заявлений):');
   console.log('  Упрощённый трек: ' + simplified + ' (' + pct(simplified) + ') — целевой диапазон 25–30%');
-  console.log('  Приоритетный трек: ' + priority + ' (' + pct(priority) + ') — целевой ориентир ~5%');
+  console.log('  Сокращённый срок рассмотрения: ' + reduced + ' (' + pct(reduced) + ') — целевой ориентир ~5%, из них упрощённый: ' + reducedSimplified + ', полный: ' + reducedFull);
   console.log('  Оценка не сформирована (всего): ' + noAssessment + ' (' + pct(noAssessment) + ') — целевой ориентир ~8%');
   console.log('    · недостаточно данных: ' + insufficientData + ' (' + pct(insufficientData) + ')');
   console.log('    · расхождение в основном диагнозе: ' + diagnosisMismatch + ' (' + pct(diagnosisMismatch) + ')');
@@ -1049,7 +1063,7 @@ const state = {
   screen: 'queue',           // 'queue' | 'card'
   headTab: 'monitoring',     // 'queue' | 'monitoring' (только для роли "Руководитель бюро")
   selectedAppId: null,
-  filters: { track: 'all', type: 'all', status: [], statusPanelOpen: false, search: '' },
+  filters: { track: 'all', deadline: 'all', type: 'all', status: [], statusPanelOpen: false, search: '' },
   sort: { field: 'date', dir: 'desc' },
   page: 1,
   monitoringPeriod: 'month', // 'week' | 'month' | 'quarter' | 'year'
@@ -1071,24 +1085,30 @@ function esc(str) {
 }
 
 // Отображаемый трек учитывает ручной перевод эксперта: после перевода
-// заявка визуально становится "Полный" — обратный переход недоступен.
+// заявление визуально становится "Полный" — обратный переход недоступен.
 function effectiveTrack(app) {
   if (app.transferred) return 'full';
   return app.track;
 }
 
 function trackBadgeClass(app) {
-  const t = effectiveTrack(app);
-  if (t === 'priority') return 'badge-priority';
-  if (t === 'simplified') return 'badge-simplified';
-  return 'badge-full';
+  return effectiveTrack(app) === 'simplified' ? 'badge-simplified' : 'badge-full';
 }
 
 function trackBadgeText(app) {
-  const t = effectiveTrack(app);
-  if (t === 'priority') return 'Приоритетный (нормативный)';
-  if (t === 'simplified') return 'Упрощённый';
-  return 'Полный';
+  return effectiveTrack(app) === 'simplified' ? 'Упрощённый' : 'Полный';
+}
+
+function lowerFirst(str) {
+  return str.charAt(0).toLowerCase() + str.slice(1);
+}
+
+// Срок — независимый от трека признак; бейдж показывается только при
+// сокращённом сроке (~5% заявлений), рядом с бейджем трека, а не вместо него.
+function deadlineBadgeMarkup(app) {
+  if (app.deadlineType !== 'reduced') return '';
+  const reason = lowerFirst(app.exclusion);
+  return `<span class="badge badge-deadline-reduced" title="Основание: ${esc(reason)}" aria-label="Сокращённый срок рассмотрения. Основание: ${esc(reason)}"><span class="deadline-badge-icon" aria-hidden="true">⏱</span>Сокращённый срок</span>`;
 }
 
 function animateCountUp(el, target, duration = 500) {
@@ -1143,7 +1163,7 @@ function renderHeader() {
   return `
     <header class="app-header">
       <div class="system-name">ЕАВИИАС МСЭ</div>
-      <div class="module-name">Заявки на МСЭ</div>
+      <div class="module-name">Заявления на МСЭ</div>
       <div class="spacer"></div>
       <div class="role-switch" role="group" aria-label="Переключатель роли">
         <button type="button" data-action="set-role" data-role="expert" class="${state.role === 'expert' ? 'active' : ''}" aria-pressed="${state.role === 'expert'}">Эксперт бюро</button>
@@ -1191,6 +1211,9 @@ function getFilteredApplications() {
   if (state.filters.track !== 'all') {
     list = list.filter((a) => a.track === state.filters.track);
   }
+  if (state.filters.deadline !== 'all') {
+    list = list.filter((a) => a.deadlineType === state.filters.deadline);
+  }
   if (state.filters.type !== 'all') {
     list = list.filter((a) => a.examType === state.filters.type);
   }
@@ -1202,13 +1225,13 @@ function getFilteredApplications() {
     list = list.filter((a) => a.number.toLowerCase().includes(q));
   }
   const dir = state.sort.dir === 'asc' ? 1 : -1;
-  const trackOrder = { simplified: 0, full: 1, priority: 2 };
+  const trackOrder = { simplified: 0, full: 1 };
   list = list.slice().sort((a, b) => {
     if (state.sort.field === 'date') return (a.receivedDate - b.receivedDate) * dir;
     if (state.sort.field === 'type') return a.examType.localeCompare(b.examType, 'ru') * dir;
-    if (state.sort.field === 'age') return (AGE_GROUP_SORT_ORDER[a.ageGroup] - AGE_GROUP_SORT_ORDER[b.ageGroup]) * dir;
     if (state.sort.field === 'nosology') return a.nosology.localeCompare(b.nosology, 'ru') * dir;
     if (state.sort.field === 'track') return (trackOrder[a.track] - trackOrder[b.track]) * dir;
+    if (state.sort.field === 'deadline') return (DEADLINE_SORT_ORDER[a.deadlineType] - DEADLINE_SORT_ORDER[b.deadlineType]) * dir;
     if (state.sort.field === 'status') return (STATUS_SORT_ORDER[a.status] - STATUS_SORT_ORDER[b.status]) * dir;
     return 0;
   });
@@ -1224,7 +1247,7 @@ function renderQueueScreen() {
 
   const simplifiedN = filtered.filter((a) => a.track === 'simplified').length;
   const fullN = filtered.filter((a) => a.track === 'full').length;
-  const priorityN = filtered.filter((a) => a.track === 'priority').length;
+  const reducedDeadlineN = filtered.filter((a) => a.deadlineType === 'reduced').length;
 
   const sortArrow = (field) => state.sort.field === field
     ? `<span class="sort-icon active">${state.sort.dir === 'asc' ? '▲' : '▼'}</span>`
@@ -1247,7 +1270,14 @@ function renderQueueScreen() {
             <option value="all" ${state.filters.track === 'all' ? 'selected' : ''}>Все треки</option>
             <option value="simplified" ${state.filters.track === 'simplified' ? 'selected' : ''}>Упрощённый</option>
             <option value="full" ${state.filters.track === 'full' ? 'selected' : ''}>Полный</option>
-            <option value="priority" ${state.filters.track === 'priority' ? 'selected' : ''}>Приоритетный</option>
+          </select>
+        </div>
+        <div class="filter-field">
+          <label for="filter-deadline">Срок</label>
+          <select id="filter-deadline" data-action="filter-deadline">
+            <option value="all" ${state.filters.deadline === 'all' ? 'selected' : ''}>Все</option>
+            <option value="normal" ${state.filters.deadline === 'normal' ? 'selected' : ''}>Обычный</option>
+            <option value="reduced" ${state.filters.deadline === 'reduced' ? 'selected' : ''}>Сокращённый</option>
           </select>
         </div>
         <div class="filter-field">
@@ -1273,7 +1303,7 @@ function renderQueueScreen() {
           </details>
         </div>
         <div class="filter-field">
-          <label for="filter-search">Поиск по номеру заявки</label>
+          <label for="filter-search">Поиск по номеру заявления</label>
           <input id="filter-search" type="search" data-action="filter-search" placeholder="2026-00001" value="${esc(state.filters.search)}">
         </div>
       </div>
@@ -1286,7 +1316,7 @@ function renderQueueScreen() {
       <span class="sep">·</span>
       <span>Полный трек: <b data-countup="${fullN}" data-current-value="${fullN}">${fullN}</b></span>
       <span class="sep">·</span>
-      <span>Приоритетные: <b data-countup="${priorityN}" data-current-value="${priorityN}">${priorityN}</b></span>
+      <span>С сокращённым сроком: <b data-countup="${reducedDeadlineN}" data-current-value="${reducedDeadlineN}">${reducedDeadlineN}</b></span>
     </div>
 
     <div class="table-wrap">
@@ -1294,12 +1324,12 @@ function renderQueueScreen() {
         <caption class="visually-hidden">Список заявок на медико-социальную экспертизу</caption>
         <thead>
           <tr>
-            <th>№ заявки</th>
+            <th>№ заявления</th>
             <th class="sortable" data-action="sort" data-field="date" tabindex="0" role="button" aria-label="Сортировать по дате поступления">Дата поступления${sortArrow('date')}</th>
             <th class="sortable" data-action="sort" data-field="type" tabindex="0" role="button" aria-label="Сортировать по типу освидетельствования">Тип${sortArrow('type')}</th>
-            <th class="sortable" data-action="sort" data-field="age" tabindex="0" role="button" aria-label="Сортировать по возрастной группе">Возрастная группа${sortArrow('age')}</th>
             <th class="sortable" data-action="sort" data-field="nosology" tabindex="0" role="button" aria-label="Сортировать по группе нозологий">Группа нозологий${sortArrow('nosology')}</th>
             <th class="sortable" data-action="sort" data-field="track" tabindex="0" role="button" aria-label="Сортировать по треку">Назначенный трек${sortArrow('track')}</th>
+            <th class="sortable" data-action="sort" data-field="deadline" tabindex="0" role="button" aria-label="Сортировать по сроку рассмотрения">Срок${sortArrow('deadline')}</th>
             <th class="sortable" data-action="sort" data-field="status" tabindex="0" role="button" aria-label="Сортировать по статусу">Статус${sortArrow('status')}</th>
           </tr>
         </thead>
@@ -1309,13 +1339,13 @@ function renderQueueScreen() {
               <td><button type="button" class="link-button link-button-plain" data-action="open-card" data-id="${a.id}">${esc(a.number)}</button></td>
               <td>${formatDate(a.receivedDate)}</td>
               <td>${esc(a.examType)}</td>
-              <td>${esc(a.ageGroup)}</td>
               <td>${esc(a.nosology)}</td>
               <td>
                 <span class="badge ${trackBadgeClass(a)}">${trackBadgeText(a)}</span>
                 ${a.reasonCode === 'no-assessment'
                   ? `<span class="no-assess-flag" role="img" aria-label="${esc(NO_ASSESSMENT_SHORT[a.noAssessmentReason])}" title="${esc(NO_ASSESSMENT_SHORT[a.noAssessmentReason])}">i</span>` : ''}
               </td>
+              <td>${deadlineBadgeMarkup(a) || '—'}</td>
               <td>${esc(a.status)}</td>
             </tr>
           `).join('')}
@@ -1338,7 +1368,7 @@ function renderQueueScreen() {
    8. РЕНДЕР: КАРТОЧКА ЗАЯВКИ (роль: эксперт бюро)
    ===================================================================== */
 
-// Поля, дублирующие блок "Факторы маршрутизации заявки" (полнота пакета,
+// Поля, дублирующие блок "Факторы маршрутизации заявления" (полнота пакета,
 // достаточность обследований, давность, число медорганизаций, противоречия,
 // согласованность диагноза), намеренно не показаны здесь во второй раз —
 // они остаются в модели данных и в скоринге, отображаются только в факторах.
@@ -1346,7 +1376,7 @@ function renderQueueScreen() {
 // регистрационные данные → тип и история освидетельствования →
 // демография → клиника → административные сведения.
 const FIELD_DEFS = [
-  ['Номер заявки', (a) => a.number],
+  ['Номер заявления', (a) => a.number],
   ['ФИО заявителя', (a) => a.applicantName],
   ['Дата поступления', (a) => formatDate(a.receivedDate)],
   ['Тип освидетельствования', (a) => a.examType],
@@ -1355,7 +1385,6 @@ const FIELD_DEFS = [
   ['Группа нозологий', (a) => a.nosology],
   ['Основной диагноз', (a) => a.mainDiagnosis],
   ['Форма направления', (a) => a.referralForm],
-  ['Нормативное исключение', (a) => a.exclusion],
 ];
 
 function docStatusMarkup(status) {
@@ -1363,12 +1392,19 @@ function docStatusMarkup(status) {
   return `<span class="doc-status ${cls}"><span class="dot"></span>${esc(status)}</span>`;
 }
 
-function trackExplanationLine(a) {
-  if (a.track === 'priority') return 'Нормативно установленный сокращённый срок рассмотрения';
-  if (a.transferred) return 'Заявка переведена экспертом на полный трек; рассмотрение проводится в общем порядке';
+function trackExplanationBase(a) {
+  if (a.transferred) return 'Заявление переведено экспертом на полный трек; рассмотрение проводится в общем порядке';
   if (a.reasonCode === 'no-assessment') return `Рассмотрение в общем порядке. ${NO_ASSESSMENT_SHORT[a.noAssessmentReason]}`;
   if (a.track === 'simplified') return 'Рассмотрение проводится заочно в упрощённом порядке';
-  return 'Рассмотрение в общем порядке.';
+  return 'Рассмотрение в общем порядке';
+}
+
+function trackExplanationLine(a) {
+  const base = trackExplanationBase(a);
+  if (a.deadlineType === 'reduced') {
+    return `${base} · Срок рассмотрения сокращён: ${lowerFirst(a.exclusion)}`;
+  }
+  return base;
 }
 
 // Значки направления фактора. Направление не передаётся только цветом —
@@ -1381,8 +1417,8 @@ function trackExplanationLine(a) {
 // строке, поэтому там ему нужна собственная подпись для скринридера;
 // в легенде рядом уже есть текст, поэтому там значок декоративный.
 const FACTOR_DIRECTION_LABEL = {
-  positive: 'Фактор в пользу упрощённого рассмотрения заявки',
-  negative: 'Фактор в пользу полноценного рассмотрения заявки',
+  positive: 'Фактор в пользу упрощённого рассмотрения заявления',
+  negative: 'Фактор в пользу полноценного рассмотрения заявления',
   neutral: 'Фактор не влияет на выбор трека',
 };
 
@@ -1408,15 +1444,12 @@ function factorIcon(direction, decorative) {
 }
 
 function renderFactorsBlock(a) {
-  if (a.track === 'priority') {
-    return `<div class="priority-message">Трек назначен на основании нормативно установленного сокращённого срока рассмотрения. Скоринг не применялся.</div>`;
-  }
   if (a.reasonCode === 'no-assessment') {
     return `<div class="no-assess-message">${esc(NO_ASSESSMENT_MESSAGES[a.noAssessmentReason])}</div>`;
   }
   return `
     <table class="factors-table">
-      <caption class="visually-hidden">Факторы, учтённые при маршрутизации заявки ${esc(a.number)}</caption>
+      <caption class="visually-hidden">Факторы, учтённые при маршрутизации заявления ${esc(a.number)}</caption>
       <thead><tr><th>Фактор</th><th>Что обнаружено</th></tr></thead>
       <tbody>
         ${a.factors.map((f) => `
@@ -1442,7 +1475,7 @@ function renderFactorsBlock(a) {
 
 function renderCardScreen() {
   const a = state.applications.find((x) => x.id === state.selectedAppId);
-  if (!a) return `<p>Заявка не найдена.</p>`;
+  if (!a) return `<p>Заявление не найдено.</p>`;
   const recognizedCount = a.documents.filter((d) => d.status === 'Распознан').length;
   const failedCount = a.documents.filter((d) => d.status === 'Не распознан').length;
   const canTransfer = state.role === 'expert' && a.track === 'simplified' && !a.transferred;
@@ -1461,13 +1494,14 @@ function renderCardScreen() {
         <div class="track-badge-wrap">
           <span class="track-badge-label">Назначенный трек</span>
           <span class="badge badge-lg ${trackBadgeClass(a)}">${trackBadgeText(a)}</span>
+          ${a.deadlineType === 'reduced' ? `<span class="badge badge-lg badge-deadline-reduced" title="Основание: ${esc(lowerFirst(a.exclusion))}" aria-label="Сокращённый срок рассмотрения. Основание: ${esc(lowerFirst(a.exclusion))}"><span class="deadline-badge-icon" aria-hidden="true">⏱</span>Сокращённый срок</span>` : ''}
         </div>
       </div>
-      <div class="card-track-explain ${a.track === 'priority' ? 'priority-note' : ''}">${trackExplanationLine(a)}</div>
+      <div class="card-track-explain ${a.deadlineType === 'reduced' ? 'deadline-reduced-note' : ''}">${trackExplanationLine(a)}</div>
     </div>
 
     <div class="panel">
-      <h2 class="block-title">Сведения по заявке</h2>
+      <h2 class="block-title">Сведения по заявлению</h2>
       <dl class="field-grid">
         ${FIELD_DEFS.map(([label, fn]) => `
           <div class="field-row"><dt class="field-name">${label}</dt><dd class="field-value">${esc(fn(a))}</dd></div>
@@ -1479,7 +1513,7 @@ function renderCardScreen() {
       <h2 class="block-title">Приложенные документы</h2>
       <div class="docs-summary">Документов: ${a.documents.length} · Распознано: ${recognizedCount} · Не распознано: ${failedCount}</div>
       <table class="docs-table">
-        <caption class="visually-hidden">Приложенные документы заявки ${esc(a.number)}</caption>
+        <caption class="visually-hidden">Приложенные документы заявления ${esc(a.number)}</caption>
         <thead>
           <tr><th>Наименование</th><th>Формат</th><th>Дата</th><th>Объём (стр.)</th><th>Статус обработки</th></tr>
         </thead>
@@ -1501,14 +1535,14 @@ function renderCardScreen() {
     </div>
 
     <div class="panel">
-      <h2 class="block-title">Факторы маршрутизации заявки</h2>
+      <h2 class="block-title">Факторы маршрутизации заявления</h2>
       ${renderFactorsBlock(a)}
     </div>
 
     ${state.role === 'expert' ? `
       <div class="panel">
         <button type="button" class="btn btn-primary" data-action="open-transfer-modal" data-id="${a.id}" ${canTransfer ? '' : 'disabled'}>
-          ${a.transferred ? 'Заявка переведена на полный трек' : 'Перевести на полный трек'}
+          ${a.transferred ? 'Заявление переведено на полный трек' : 'Перевести на полный трек'}
         </button>
       </div>
     ` : ''}
@@ -1538,7 +1572,7 @@ function renderTransferModal() {
   return `
     <div class="modal-overlay ${open ? 'open' : ''}" role="dialog" aria-modal="true" aria-labelledby="transfer-modal-title" aria-hidden="${!open}">
       <div class="modal-box">
-        <h3 id="transfer-modal-title">Перевод заявки на полный трек</h3>
+        <h3 id="transfer-modal-title">Перевод заявления на полный трек</h3>
         <label for="transfer-reason">Причина перевода</label>
         <select id="transfer-reason">
           <option value="требуется дообследование">Требуется дообследование</option>
@@ -1559,9 +1593,9 @@ function renderTransferModal() {
   `;
 }
 
-// Заявки со статусом "На рассмотрении"/"Принято решение" кликабельны в
+// Заявления со статусом "На рассмотрении"/"Принято решение" кликабельны в
 // очереди и в ленте событий, но карточка для них не открывается — вместо
-// этого показывается это окно. Дальнейшая работа с такой заявкой (ход
+// этого показывается это окно. Дальнейшая работа с таким заявлением (ход
 // рассмотрения, протокол) — часть основного интерфейса ЕАВИИАС МСЭ и
 // сознательно оставлена вне периметра прототипа маршрутизации.
 function renderInfoModal() {
@@ -1569,8 +1603,8 @@ function renderInfoModal() {
   return `
     <div class="modal-overlay ${open ? 'open' : ''}" role="dialog" aria-modal="true" aria-labelledby="info-modal-title" aria-hidden="${!open}">
       <div class="modal-box">
-        <h3 id="info-modal-title">Заявка недоступна для просмотра</h3>
-        <p>Просмотр заявки доступен в полной версии системы. В прототипе доступен просмотр только заявок со статусом «Ожидает рассмотрения».</p>
+        <h3 id="info-modal-title">Заявление недоступно для просмотра</h3>
+        <p>Просмотр заявления доступен в полной версии системы. В прототипе доступен просмотр только заявлений со статусом «Ожидает рассмотрения».</p>
         <div class="modal-actions">
           <button type="button" class="btn btn-primary" data-action="close-info-modal">Понятно</button>
         </div>
@@ -1583,9 +1617,9 @@ function renderInfoModal() {
    9. РЕНДЕР: МОНИТОРИНГ (роль: руководитель бюро) + SVG-визуализации
    ===================================================================== */
 
-// Числа за неделю/месяц — реальный срез очереди (все заявки укладываются
+// Числа за неделю/месяц — реальный срез очереди (все заявления укладываются
 // в отчётный месяц). Квартал — самостоятельная агрегация, см. buildQuarterFlowStats:
-// заявки прошлых месяцев уже закрыты и не хранятся в этой же очереди.
+// заявления прошлых месяцев уже закрыты и не хранятся в этой же очереди.
 function getFlowStats(period) {
   if (period === 'quarter') return state.quarterFlowStats;
   if (period === 'year') return state.yearFlowStats;
@@ -1598,12 +1632,11 @@ function renderDistributionBar(counts, total) {
     { key: 'simplified', label: 'Упрощённый трек', color: 'var(--track-simplified)', value: counts.simplified },
     { key: 'fullOffsite', label: 'Полный трек, заочно', color: '#8B96A3', value: counts.fullOffsite },
     { key: 'fullOnsite', label: 'Полный трек, очно', color: 'var(--track-full)', value: counts.fullOnsite },
-    { key: 'priority', label: 'Приоритетные (нормативные)', color: 'var(--track-priority)', value: counts.priority },
   ];
   return `
     <div class="dist-bar-wrap">
       <div class="dist-bar">
-        ${segs.map((s) => `<div class="dist-seg" style="width:${total ? (s.value / total * 100) : 0}%;background:${s.color}" title="${s.label}: ${s.value} заявок (${total ? (s.value / total * 100).toFixed(1) : 0}%)"></div>`).join('')}
+        ${segs.map((s) => `<div class="dist-seg" style="width:${total ? (s.value / total * 100) : 0}%;background:${s.color}" title="${s.label}: ${s.value} заявлений (${total ? (s.value / total * 100).toFixed(1) : 0}%)"></div>`).join('')}
       </div>
       <div class="dist-legend">
         ${segs.map((s) => `<span class="item"><span class="swatch" style="background:${s.color}"></span>${s.label} — ${total ? (s.value / total * 100).toFixed(1) : 0}%</span>`).join('')}
@@ -1671,7 +1704,7 @@ function renderEventsBlock() {
       <table class="events-table">
         <caption class="visually-hidden">Лента событий маршрутизации заявок</caption>
         <thead>
-          <tr><th>Дата</th><th>Время</th><th>№ заявки</th><th>Тип события</th><th>Описание</th><th>Эксперт</th></tr>
+          <tr><th>Дата</th><th>Время</th><th>№ заявления</th><th>Тип события</th><th>Описание</th><th>Эксперт</th></tr>
         </thead>
         <tbody>
           ${state.events.map((e, i) => `
@@ -1692,7 +1725,10 @@ function renderEventsBlock() {
 
 function renderMonitoringScreen() {
   const flow = getFlowStats(state.monitoringPeriod);
-  const { total, simplified: simplifiedN, full: fullN, priority: priorityN, fullOffsite: fullOffsiteN, fullOnsite: fullOnsiteN } = flow;
+  const {
+    total, simplified: simplifiedN, full: fullN, fullOffsite: fullOffsiteN, fullOnsite: fullOnsiteN,
+    reduced: reducedN, reducedSimplified: reducedSimplifiedN, reducedFull: reducedFullN,
+  } = flow;
   const transferredInPeriod = state.applications.filter((a) => a.transferred).length;
   const simplifiedBase = state.applications.filter((a) => a.track === 'simplified').length;
 
@@ -1714,7 +1750,7 @@ function renderMonitoringScreen() {
       <h2 class="block-title">Поток и распределение</h2>
       <div class="tiles-row">
         <div class="tile">
-          <div class="tile-label">Поступило заявок за ${periodLabel}</div>
+          <div class="tile-label">Поступило заявлений за ${periodLabel}</div>
           <div class="tile-value" data-countup="${total}" data-current-value="0">0</div>
         </div>
         <div class="tile">
@@ -1725,12 +1761,12 @@ function renderMonitoringScreen() {
           <div class="tile-label">Направлено на полный трек</div>
           <div class="tile-value" data-countup="${fullN}" data-current-value="0">0</div>
         </div>
-        <div class="tile">
-          <div class="tile-label">Приоритетные (нормативные)</div>
-          <div class="tile-value" data-countup="${priorityN}" data-current-value="0">0</div>
+        <div class="tile" title="Упрощённый трек: ${reducedSimplifiedN} · Полный трек: ${reducedFullN}">
+          <div class="tile-label">Заявлений с сокращённым сроком</div>
+          <div class="tile-value" data-countup="${reducedN}" data-current-value="0">0</div>
         </div>
       </div>
-      ${renderDistributionBar({ simplified: simplifiedN, fullOffsite: fullOffsiteN, fullOnsite: fullOnsiteN, priority: priorityN }, total)}
+      ${renderDistributionBar({ simplified: simplifiedN, fullOffsite: fullOffsiteN, fullOnsite: fullOnsiteN }, total)}
       <div class="tiles-row" style="grid-template-columns:1fr;margin-top:16px;">
         <div class="tile">
           <div class="tile-label">Переведено с упрощённого на полный (за месяц, накопительно)</div>
@@ -1741,7 +1777,7 @@ function renderMonitoringScreen() {
     </div>
 
     <div class="panel">
-      <h2 class="block-title">Средний срок рассмотрения заявки</h2>
+      <h2 class="block-title">Средний срок рассмотрения заявления</h2>
       ${renderDurationBlock()}
     </div>
 
@@ -1787,7 +1823,7 @@ function attachHandlers() {
   });
 
   // data-action="open-card" встречается и в очереди, и в ленте событий мониторинга —
-  // клик открывает карточку поверх текущего экрана. Заявки, по которым уже
+  // клик открывает карточку поверх текущего экрана. Заявления, по которым уже
   // идёт рассмотрение или принято решение, не открываются — показывается
   // информационное окно (см. renderInfoModal): дальнейший ход рассмотрения
   // вне периметра этого модуля. headTab сбрасывается в 'queue', иначе у
@@ -1813,7 +1849,7 @@ function attachHandlers() {
     row.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(); } });
   });
 
-  // Клик в любом месте строки очереди (не только по номеру заявки) тоже открывает карточку.
+  // Клик в любом месте строки очереди (не только по номеру заявления) тоже открывает карточку.
   root.querySelectorAll('[data-action="open-card-row"]').forEach((row) => {
     row.addEventListener('click', (e) => {
       if (e.target.closest('[data-action="open-card"]')) return; // избегаем двойного рендера
@@ -1830,6 +1866,9 @@ function attachHandlers() {
 
   const trackSel = root.querySelector('[data-action="filter-track"]');
   if (trackSel) trackSel.addEventListener('change', () => { state.filters.track = trackSel.value; state.page = 1; render(); });
+
+  const deadlineSel = root.querySelector('[data-action="filter-deadline"]');
+  if (deadlineSel) deadlineSel.addEventListener('change', () => { state.filters.deadline = deadlineSel.value; state.page = 1; render(); });
 
   const typeSel = root.querySelector('[data-action="filter-type"]');
   if (typeSel) typeSel.addEventListener('change', () => { state.filters.type = typeSel.value; state.page = 1; render(); });
@@ -1952,7 +1991,7 @@ function attachHandlers() {
       state.events = state.events.slice(0, CONFIG.EVENTS_VISIBLE);
       state.transferModalAppId = null;
       render();
-      showToast('success', `Заявка № ${app.number} переведена на полный трек`);
+      showToast('success', `Заявление № ${app.number} переведено на полный трек`);
 
       const simplifiedBase = state.applications.filter((a) => a.track === 'simplified').length;
       const transferredCount = state.applications.filter((a) => a.transferred).length;
