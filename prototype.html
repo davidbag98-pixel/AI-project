@@ -129,6 +129,7 @@
   .badge.badge-simplified{background:var(--track-simplified-bg);color:var(--track-simplified);}
   .badge.badge-full{background:var(--track-full-bg);color:var(--track-full);}
   .badge.badge-deadline-reduced{background:var(--amber-bg);color:var(--amber);}
+  .badge.badge-deadline-normal{background:var(--track-full-bg);color:var(--track-full);}
   .deadline-badge-icon{margin-right:1px;}
   .badge.badge-lg{font-size:15px;padding:6px 14px;}
   .no-assess-flag{
@@ -161,7 +162,6 @@
   .card-header-block .app-number{font-size:20px;font-weight:700;margin:0;}
   .card-header-block .app-date{color:var(--text-secondary);font-size:13px;}
   .card-track-explain{margin-top:10px;color:var(--text-secondary);font-size:13px;}
-  .card-track-explain.deadline-reduced-note{color:var(--amber);}
   .track-badge-wrap{display:flex;flex-direction:row;align-items:center;gap:8px;}
 
   /* grid-auto-flow:column + заданное число строк = сначала заполняется весь
@@ -238,7 +238,7 @@
   .head-tabs button:last-child{border-right:none;}
   .head-tabs button.active{background:var(--accent);color:#fff;}
 
-  .tiles-row{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:16px;}
+  .tiles-row{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:16px;}
   .tile{background:#fff;border:1px solid var(--border);border-radius:3px;padding:16px;}
   .tile .tile-label{font-size:12.5px;color:var(--text-secondary);margin-bottom:8px;}
   .tile .tile-value{font-size:28px;font-weight:700;line-height:1;}
@@ -1111,21 +1111,24 @@ function lowerFirst(str) {
   return str.charAt(0).toLowerCase() + str.slice(1);
 }
 
-// Срок — независимый от трека признак; бейдж показывается только при
-// сокращённом сроке (~5% заявлений), рядом с бейджем трека, а не вместо него.
+// Срок — независимый от трека признак; бейдж показывается всегда, рядом с
+// бейджем трека, а не вместо него, — и при сокращённом, и при обычном сроке.
 function deadlineBadgeMarkup(app) {
-  if (app.deadlineType !== 'reduced') return '';
-  const reason = lowerFirst(app.exclusion);
-  return `<span class="badge badge-deadline-reduced" title="Основание: ${esc(reason)}" aria-label="Сокращённый срок рассмотрения. Основание: ${esc(reason)}"><span class="deadline-badge-icon" aria-hidden="true">⏱</span>Сокращённый срок</span>`;
+  if (app.deadlineType === 'reduced') {
+    const reason = lowerFirst(app.exclusion);
+    return `<span class="badge badge-lg badge-deadline-reduced" title="Основание: ${esc(reason)}" aria-label="Сокращённый срок рассмотрения. Основание: ${esc(reason)}"><span class="deadline-badge-icon" aria-hidden="true">⏱</span>Сокращённый срок</span>`;
+  }
+  return `<span class="badge badge-lg badge-deadline-normal">Стандартный срок</span>`;
 }
 
 // Короткая версия для столбца "Срок" в очереди: подпись без слова "срок"
-// (само название столбца уже задаёт контекст), обычный срок — не бейдж,
-// а обычный текст, чтобы не создавать в таблице два одинаково заметных бейджа.
+// (само название столбца уже задаёт контекст).
 function deadlineCellMarkup(app) {
-  if (app.deadlineType !== 'reduced') return 'Стандартный';
-  const reason = lowerFirst(app.exclusion);
-  return `<span class="badge badge-deadline-reduced" title="Основание: ${esc(reason)}" aria-label="Сокращённый срок рассмотрения. Основание: ${esc(reason)}"><span class="deadline-badge-icon" aria-hidden="true">⏱</span>Сокращённый</span>`;
+  if (app.deadlineType === 'reduced') {
+    const reason = lowerFirst(app.exclusion);
+    return `<span class="badge badge-deadline-reduced" title="Основание: ${esc(reason)}" aria-label="Сокращённый срок рассмотрения. Основание: ${esc(reason)}"><span class="deadline-badge-icon" aria-hidden="true">⏱</span>Сокращённый</span>`;
+  }
+  return `<span class="badge badge-deadline-normal">Стандартный</span>`;
 }
 
 function animateCountUp(el, target, duration = 500) {
@@ -1509,11 +1512,11 @@ function renderCardScreen() {
           <div class="app-date">Дата поступления: ${formatDate(a.receivedDate)}</div>
         </div>
         <div class="track-badge-wrap">
-          ${a.deadlineType === 'reduced' ? `<span class="badge badge-lg badge-deadline-reduced" title="Основание: ${esc(lowerFirst(a.exclusion))}" aria-label="Сокращённый срок рассмотрения. Основание: ${esc(lowerFirst(a.exclusion))}"><span class="deadline-badge-icon" aria-hidden="true">⏱</span>Сокращённый срок</span>` : ''}
+          ${deadlineBadgeMarkup(a)}
           <span class="badge badge-lg ${trackBadgeClass(a)}">${trackBadgeText(a)}</span>
         </div>
       </div>
-      <div class="card-track-explain ${a.deadlineType === 'reduced' ? 'deadline-reduced-note' : ''}">${trackExplanationLine(a)}</div>
+      <div class="card-track-explain">${trackExplanationLine(a)}</div>
     </div>
 
     <div class="panel">
@@ -1674,9 +1677,9 @@ function renderDurationBlock() {
         <div class="duration-label">${r.label}</div>
         <div class="duration-bar-track">
           <div class="duration-bar-fill" style="width:${(s.avg / maxScale * 100).toFixed(1)}%;background:${r.color}"></div>
-          <div class="duration-benchmark" style="left:${(r.benchmark / maxScale * 100).toFixed(1)}%" title="Ориентир: ${r.benchmark} дн."></div>
+          <div class="duration-benchmark" style="left:${(r.benchmark / maxScale * 100).toFixed(1)}%" title="Норма: ${r.benchmark} дн."></div>
         </div>
-        <div class="duration-value">${s.avg} раб. дн.<span class="benchmark-note">ориентир ${r.benchmark} дн.</span></div>
+        <div class="duration-value">${s.avg} раб. дн.<span class="benchmark-note">норма ${r.benchmark} дн.</span></div>
       </div>
     `;
   }).join('');
@@ -1870,6 +1873,7 @@ function attachHandlers() {
     state.headTab = 'queue';
     state.stubPanelOpen = false;
     render();
+    window.scrollTo(0, 0);
   };
 
   root.querySelectorAll('[data-action="open-card"]').forEach((row) => {
