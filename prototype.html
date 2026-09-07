@@ -77,6 +77,22 @@
   }
   .filter-field input[type=search]{min-width:220px;}
 
+  .status-filter{position:relative;}
+  .status-filter summary{
+    border:1px solid var(--border);border-radius:3px;padding:7px 10px;background:#fff;min-width:170px;
+    cursor:pointer;list-style:none;font-size:14px;color:var(--text);user-select:none;
+  }
+  .status-filter summary::-webkit-details-marker{display:none;}
+  .status-filter summary::after{content:'▾';float:right;color:var(--text-secondary);margin-left:8px;}
+  .status-filter[open] summary::after{content:'▴';}
+  .status-filter-options{
+    position:absolute;top:calc(100% + 4px);left:0;background:#fff;border:1px solid var(--border);border-radius:3px;
+    padding:8px 4px;box-shadow:0 3px 10px rgba(0,0,0,.12);z-index:20;min-width:220px;
+  }
+  .status-filter-option{display:flex;align-items:center;gap:8px;padding:6px 10px;font-size:13px;cursor:pointer;white-space:nowrap;}
+  .status-filter-option:hover{background:#F4F8FA;}
+  .status-filter-option input{margin:0;}
+
   .summary-line{font-size:13px;color:var(--text-secondary);margin:14px 0 10px;display:flex;gap:6px;flex-wrap:wrap;}
   .summary-line b{color:var(--text);font-weight:600;}
   .summary-line .sep{color:var(--border);}
@@ -697,19 +713,31 @@ const REVIEW_STATUS = {
   DECIDED: 'Принято решение',
 };
 
+// Порядок для мультивыбора фильтра и для сортировки колонки "Статус" —
+// по ходу рассмотрения, а не по алфавиту.
+const REVIEW_STATUS_LIST = [REVIEW_STATUS.PENDING, REVIEW_STATUS.IN_REVIEW, REVIEW_STATUS.DECIDED];
+const STATUS_SORT_ORDER = { [REVIEW_STATUS.PENDING]: 0, [REVIEW_STATUS.IN_REVIEW]: 1, [REVIEW_STATUS.DECIDED]: 2 };
+// Возрастная группа сортируется по возрасту, а не по алфавиту (иначе "до 18"
+// оказалась бы после "60 и старше" — цифры в начале строки сортируются раньше букв).
+const AGE_GROUP_SORT_ORDER = { 'до 18': 0, '18–44': 1, '45–59': 2, '60 и старше': 3 };
+
+// "На рассмотрении" — подавляющее большинство (~70%): в реальном бюро в
+// любой момент времени в очереди преимущественно дела в работе. Остаток
+// распределён между "Ожидает" и "Принято решение" с небольшим сдвигом по
+// давности заявки (чем "старше" заявка, тем выше шанс, что решение уже принято).
 function pickReviewStatus(rng, daysAgo) {
   if (daysAgo <= 9) {
     return weightedChoice(rng, [
-      [REVIEW_STATUS.PENDING, 0.75], [REVIEW_STATUS.IN_REVIEW, 0.20], [REVIEW_STATUS.DECIDED, 0.05],
+      [REVIEW_STATUS.PENDING, 0.22], [REVIEW_STATUS.IN_REVIEW, 0.70], [REVIEW_STATUS.DECIDED, 0.08],
     ]);
   }
   if (daysAgo <= 19) {
     return weightedChoice(rng, [
-      [REVIEW_STATUS.PENDING, 0.45], [REVIEW_STATUS.IN_REVIEW, 0.35], [REVIEW_STATUS.DECIDED, 0.20],
+      [REVIEW_STATUS.PENDING, 0.15], [REVIEW_STATUS.IN_REVIEW, 0.70], [REVIEW_STATUS.DECIDED, 0.15],
     ]);
   }
   return weightedChoice(rng, [
-    [REVIEW_STATUS.PENDING, 0.20], [REVIEW_STATUS.IN_REVIEW, 0.30], [REVIEW_STATUS.DECIDED, 0.50],
+    [REVIEW_STATUS.PENDING, 0.10], [REVIEW_STATUS.IN_REVIEW, 0.68], [REVIEW_STATUS.DECIDED, 0.22],
   ]);
 }
 
@@ -1015,7 +1043,7 @@ const state = {
   screen: 'queue',           // 'queue' | 'card'
   headTab: 'monitoring',     // 'queue' | 'monitoring' (только для роли "Руководитель бюро")
   selectedAppId: null,
-  filters: { track: 'all', type: 'all', search: '' },
+  filters: { track: 'all', type: 'all', status: [], statusPanelOpen: false, search: '' },
   sort: { field: 'date', dir: 'desc' },
   page: 1,
   monitoringPeriod: 'month', // 'week' | 'month' | 'quarter' | 'year'
@@ -1160,6 +1188,9 @@ function getFilteredApplications() {
   if (state.filters.type !== 'all') {
     list = list.filter((a) => a.examType === state.filters.type);
   }
+  if (state.filters.status.length > 0) {
+    list = list.filter((a) => state.filters.status.includes(a.status));
+  }
   if (state.filters.search.trim()) {
     const q = state.filters.search.trim().toLowerCase();
     list = list.filter((a) => a.number.toLowerCase().includes(q));
@@ -1168,7 +1199,11 @@ function getFilteredApplications() {
   const trackOrder = { simplified: 0, full: 1, priority: 2 };
   list = list.slice().sort((a, b) => {
     if (state.sort.field === 'date') return (a.receivedDate - b.receivedDate) * dir;
+    if (state.sort.field === 'type') return a.examType.localeCompare(b.examType, 'ru') * dir;
+    if (state.sort.field === 'age') return (AGE_GROUP_SORT_ORDER[a.ageGroup] - AGE_GROUP_SORT_ORDER[b.ageGroup]) * dir;
+    if (state.sort.field === 'nosology') return a.nosology.localeCompare(b.nosology, 'ru') * dir;
     if (state.sort.field === 'track') return (trackOrder[a.track] - trackOrder[b.track]) * dir;
+    if (state.sort.field === 'status') return (STATUS_SORT_ORDER[a.status] - STATUS_SORT_ORDER[b.status]) * dir;
     return 0;
   });
   return list;
@@ -1187,6 +1222,13 @@ function renderQueueScreen() {
 
   const sortArrow = (field) => state.sort.field === field
     ? `<span class="sort-arrow">${state.sort.dir === 'asc' ? '▲' : '▼'}</span>` : '';
+
+  function statusFilterSummary() {
+    const n = state.filters.status.length;
+    if (n === 0) return 'Все статусы';
+    if (n === 1) return state.filters.status[0];
+    return `Выбрано: ${n}`;
+  }
 
   return `
     <h1 class="screen-title">Очередь заявок</h1>
@@ -1208,6 +1250,20 @@ function renderQueueScreen() {
             <option value="Первичное" ${state.filters.type === 'Первичное' ? 'selected' : ''}>Первичное</option>
             <option value="Повторное" ${state.filters.type === 'Повторное' ? 'selected' : ''}>Повторное</option>
           </select>
+        </div>
+        <div class="filter-field">
+          <span id="status-filter-label">Статус</span>
+          <details class="status-filter" data-action="status-filter" ${state.filters.statusPanelOpen ? 'open' : ''}>
+            <summary aria-labelledby="status-filter-label">${statusFilterSummary()}</summary>
+            <div class="status-filter-options">
+              ${REVIEW_STATUS_LIST.map((s) => `
+                <label class="status-filter-option">
+                  <input type="checkbox" data-action="filter-status-checkbox" value="${esc(s)}" ${state.filters.status.includes(s) ? 'checked' : ''}>
+                  ${esc(s)}
+                </label>
+              `).join('')}
+            </div>
+          </details>
         </div>
         <div class="filter-field">
           <label for="filter-search">Поиск по номеру заявки</label>
@@ -1233,11 +1289,11 @@ function renderQueueScreen() {
           <tr>
             <th>№ заявки</th>
             <th class="sortable" data-action="sort" data-field="date" tabindex="0" role="button" aria-label="Сортировать по дате поступления">Дата поступления${sortArrow('date')}</th>
-            <th>Тип</th>
-            <th>Возрастная группа</th>
-            <th>Группа нозологий</th>
+            <th class="sortable" data-action="sort" data-field="type" tabindex="0" role="button" aria-label="Сортировать по типу освидетельствования">Тип${sortArrow('type')}</th>
+            <th class="sortable" data-action="sort" data-field="age" tabindex="0" role="button" aria-label="Сортировать по возрастной группе">Возрастная группа${sortArrow('age')}</th>
+            <th class="sortable" data-action="sort" data-field="nosology" tabindex="0" role="button" aria-label="Сортировать по группе нозологий">Группа нозологий${sortArrow('nosology')}</th>
             <th class="sortable" data-action="sort" data-field="track" tabindex="0" role="button" aria-label="Сортировать по треку">Назначенный трек${sortArrow('track')}</th>
-            <th>Статус</th>
+            <th class="sortable" data-action="sort" data-field="status" tabindex="0" role="button" aria-label="Сортировать по статусу">Статус${sortArrow('status')}</th>
           </tr>
         </thead>
         <tbody>
@@ -1279,16 +1335,19 @@ function renderQueueScreen() {
 // достаточность обследований, давность, число медорганизаций, противоречия,
 // согласованность диагноза), намеренно не показаны здесь во второй раз —
 // они остаются в модели данных и в скоринге, отображаются только в факторах.
+// Порядок — по смысловым группам, не по случаю добавления в код:
+// регистрационные данные → тип и история освидетельствования →
+// демография → клиника → административные сведения.
 const FIELD_DEFS = [
   ['Номер заявки', (a) => a.number],
   ['ФИО заявителя', (a) => a.applicantName],
   ['Дата поступления', (a) => formatDate(a.receivedDate)],
   ['Тип освидетельствования', (a) => a.examType],
   ['Возрастная группа', (a) => a.ageGroup],
+  ['Предыдущие освидетельствования', (a) => a.prevExamStatus],
   ['Группа нозологий', (a) => a.nosology],
   ['Основной диагноз', (a) => a.mainDiagnosis],
   ['Форма направления', (a) => a.referralForm],
-  ['Предыдущие освидетельствования', (a) => a.prevExamStatus],
   ['Нормативное исключение', (a) => a.exclusion],
 ];
 
@@ -1504,7 +1563,7 @@ function renderInfoModal() {
     <div class="modal-overlay ${open ? 'open' : ''}" role="dialog" aria-modal="true" aria-labelledby="info-modal-title" aria-hidden="${!open}">
       <div class="modal-box">
         <h3 id="info-modal-title">Заявка недоступна для просмотра</h3>
-        <p>Просмотр заявки доступен в полной версии системы.</p>
+        <p>Просмотр заявки доступен в полной версии системы. В прототипе доступен просмотр только заявок со статусом «Ожидает рассмотрения».</p>
         <div class="modal-actions">
           <button type="button" class="btn btn-primary" data-action="close-info-modal">Понятно</button>
         </div>
@@ -1768,6 +1827,25 @@ function attachHandlers() {
   const typeSel = root.querySelector('[data-action="filter-type"]');
   if (typeSel) typeSel.addEventListener('change', () => { state.filters.type = typeSel.value; state.page = 1; render(); });
 
+  // Мультивыбор статуса: пустой выбор = показывать все статусы. Раскрытое
+  // состояние <details> хранится отдельно, чтобы попап не закрывался при
+  // отметке очередного чекбокса (каждый клик по чекбоксу вызывает render()).
+  const statusFilter = root.querySelector('[data-action="status-filter"]');
+  if (statusFilter) {
+    statusFilter.addEventListener('toggle', () => { state.filters.statusPanelOpen = statusFilter.open; });
+  }
+  root.querySelectorAll('[data-action="filter-status-checkbox"]').forEach((checkbox) => {
+    checkbox.addEventListener('change', () => {
+      const value = checkbox.value;
+      const idx = state.filters.status.indexOf(value);
+      if (checkbox.checked && idx === -1) state.filters.status.push(value);
+      if (!checkbox.checked && idx !== -1) state.filters.status.splice(idx, 1);
+      state.filters.statusPanelOpen = true;
+      state.page = 1;
+      render();
+    });
+  });
+
   const searchInput = root.querySelector('[data-action="filter-search"]');
   if (searchInput) {
     // render() полностью пересоздаёт DOM — старый узел input после этого отсоединён,
@@ -1801,12 +1879,10 @@ function attachHandlers() {
     btn.addEventListener('click', () => { state.page = Number(btn.dataset.page); render(); });
   });
 
+  // Тоста здесь намеренно нет: панель справа уже содержит тот же текст
+  // ("Просмотр документа доступен..."), дублировать его тостом избыточно.
   root.querySelectorAll('[data-action="open-doc-stub"]').forEach((row) => {
-    const open = () => {
-      state.stubPanelOpen = Number(row.dataset.idx);
-      render();
-      showToast('info', 'Просмотр документа доступен в основном интерфейсе ЕАВИИАС МСЭ');
-    };
+    const open = () => { state.stubPanelOpen = Number(row.dataset.idx); render(); };
     row.addEventListener('click', open);
     row.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(); } });
   });
@@ -1817,7 +1893,6 @@ function attachHandlers() {
       if (e.target.closest('[data-action="open-doc-stub"]')) return;
       state.stubPanelOpen = Number(row.dataset.idx);
       render();
-      showToast('info', 'Просмотр документа доступен в основном интерфейсе ЕАВИИАС МСЭ');
     });
   });
   root.querySelectorAll('[data-action="close-stub"]').forEach((el) => {
