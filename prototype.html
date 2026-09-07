@@ -162,8 +162,7 @@
   .card-header-block .app-date{color:var(--text-secondary);font-size:13px;}
   .card-track-explain{margin-top:10px;color:var(--text-secondary);font-size:13px;}
   .card-track-explain.deadline-reduced-note{color:var(--amber);}
-  .track-badge-wrap{display:flex;flex-direction:column;align-items:flex-end;gap:5px;}
-  .track-badge-label{font-size:11px;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.04em;}
+  .track-badge-wrap{display:flex;flex-direction:row;align-items:center;gap:8px;}
 
   /* grid-auto-flow:column + заданное число строк = сначала заполняется весь
      левый столбец сверху вниз, потом правый — а не построчно слева направо. */
@@ -1510,9 +1509,8 @@ function renderCardScreen() {
           <div class="app-date">Дата поступления: ${formatDate(a.receivedDate)}</div>
         </div>
         <div class="track-badge-wrap">
-          <span class="track-badge-label">Назначенный трек</span>
-          <span class="badge badge-lg ${trackBadgeClass(a)}">${trackBadgeText(a)}</span>
           ${a.deadlineType === 'reduced' ? `<span class="badge badge-lg badge-deadline-reduced" title="Основание: ${esc(lowerFirst(a.exclusion))}" aria-label="Сокращённый срок рассмотрения. Основание: ${esc(lowerFirst(a.exclusion))}"><span class="deadline-badge-icon" aria-hidden="true">⏱</span>Сокращённый срок</span>` : ''}
+          <span class="badge badge-lg ${trackBadgeClass(a)}">${trackBadgeText(a)}</span>
         </div>
       </div>
       <div class="card-track-explain ${a.deadlineType === 'reduced' ? 'deadline-reduced-note' : ''}">${trackExplanationLine(a)}</div>
