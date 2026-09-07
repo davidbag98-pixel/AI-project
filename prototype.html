@@ -1690,7 +1690,7 @@ function renderQualityBlock(flow) {
   const transferRate = simplifiedBase ? transferredCount / simplifiedBase : 0;
   const overLimit = transferRate > CONFIG.TRANSFER_RATE_LIMIT;
 
-  const renderIndicator = (title, value, limit, over, note) => `
+  const renderIndicator = (title, value, limit, over, note, inputsNote) => `
     <div class="quality-card ${over ? 'warning' : ''}">
       <div class="q-title">${title}</div>
       <div class="q-value">${(value * 100).toFixed(1)}%</div>
@@ -1699,6 +1699,7 @@ function renderQualityBlock(flow) {
         <div class="q-limit-marker" style="left:${Math.min(100, limit / (limit * 1.6) * 100).toFixed(1)}%" title="Граница нормы: ${(limit * 100).toFixed(0)}%"></div>
       </div>
       <div class="q-note ${over ? 'warning-note' : ''}">${over ? `Превышена граница нормы (не более ${(limit * 100).toFixed(0)}%). ${note}` : `Граница нормы: не более ${(limit * 100).toFixed(0)}%`}</div>
+      <div class="q-note">${inputsNote}</div>
     </div>
   `;
 
@@ -1729,7 +1730,7 @@ function renderQualityBlock(flow) {
 
   return `
     <div class="quality-grid">
-      ${renderIndicator('Доля дел, переведённых с упрощённого трека на полный', transferRate, CONFIG.TRANSFER_RATE_LIMIT, overLimit, 'Рекомендуется проверить причины переводов.')}
+      ${renderIndicator('Доля дел, переведённых с упрощённого трека на полный', transferRate, CONFIG.TRANSFER_RATE_LIMIT, overLimit, 'Рекомендуется проверить причины переводов.', `Переведено: ${transferredCount} · Поступило: ${simplifiedBase}`)}
       ${throughputCard}
     </div>
   `;
