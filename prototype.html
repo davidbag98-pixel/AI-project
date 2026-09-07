@@ -97,6 +97,11 @@
   table.queue-table tbody tr:hover{background:#F4F8FA;}
   table.queue-table tbody tr:last-child td{border-bottom:none;}
 
+  .link-button{
+    background:none;border:none;padding:0;margin:0;font:inherit;color:var(--accent);cursor:pointer;text-decoration:none;
+  }
+  .link-button:hover{text-decoration:underline;}
+
   .badge{display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:3px;font-size:12.5px;font-weight:600;white-space:nowrap;}
   .badge.badge-simplified{background:var(--track-simplified-bg);color:var(--track-simplified);}
   .badge.badge-full{background:var(--track-full-bg);color:var(--track-full);}
@@ -129,13 +134,16 @@
 
   .card-header-block{display:flex;align-items:flex-start;justify-content:space-between;gap:20px;flex-wrap:wrap;}
   .card-header-block .meta{display:flex;flex-direction:column;gap:4px;}
-  .card-header-block .app-number{font-size:20px;font-weight:700;}
+  .card-header-block .app-number{font-size:20px;font-weight:700;margin:0;}
   .card-header-block .app-date{color:var(--text-secondary);font-size:13px;}
   .card-track-explain{margin-top:10px;color:var(--text-secondary);font-size:13px;}
   .card-track-explain.priority-note{color:var(--track-priority);}
+  .track-badge-wrap{display:flex;flex-direction:column;align-items:flex-end;gap:5px;}
+  .track-badge-label{font-size:11px;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.04em;}
 
-  .field-grid{display:grid;grid-template-columns:1fr 1fr;gap:0 32px;}
+  .field-grid{display:grid;grid-template-columns:1fr 1fr;gap:0 32px;margin:0;}
   .field-row{display:flex;justify-content:space-between;gap:16px;padding:8px 0;border-bottom:1px solid var(--border);}
+  .field-row .field-name,.field-row .field-value{margin:0;}
   .field-row .field-name{color:var(--text-secondary);}
   .field-row .field-value{font-weight:600;text-align:right;}
 
@@ -156,17 +164,12 @@
   table.factors-table th,table.factors-table td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--border);font-size:13px;vertical-align:top;}
   table.factors-table thead th{background:#F0F3F5;color:var(--text-secondary);font-weight:600;font-size:12.5px;}
   table.factors-table tbody tr:last-child td{border-bottom:none;}
-  table.factors-table td.factor-name{font-weight:600;white-space:nowrap;}
-  .influence{display:flex;flex-direction:column;gap:4px;}
-  .influence-dots{display:flex;gap:3px;}
-  .influence-dots .dot{width:9px;height:9px;border-radius:50%;border:1.5px solid var(--border);display:inline-block;}
-  .influence.positive .influence-dots .dot.filled{background:var(--track-simplified);border-color:var(--track-simplified);}
-  .influence.negative .influence-dots .dot.filled{background:var(--warning);border-color:var(--warning);}
-  .influence-text{font-size:12px;font-weight:600;}
-  .influence.positive .influence-text{color:var(--track-simplified);}
-  .influence.negative .influence-text{color:var(--warning);}
-  .card-footnote{margin-top:16px;padding-top:14px;border-top:1px solid var(--border);color:var(--text-secondary);font-size:12.5px;}
-  .card-action{margin-top:16px;padding-top:16px;border-top:1px solid var(--border);}
+  table.factors-table td.factor-name{font-weight:600;white-space:nowrap;width:230px;}
+  .factor-detail{display:flex;align-items:flex-start;gap:9px;}
+  .factor-icon{flex-shrink:0;width:18px;height:18px;margin-top:1px;}
+  .factors-legend{display:flex;gap:24px;margin-top:14px;flex-wrap:wrap;}
+  .factors-legend .legend-item{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--text-secondary);}
+  .factors-legend .factor-icon{width:16px;height:16px;}
   .no-assess-message,.priority-message{
     background:#F0F3F5;border:1px solid var(--border);border-radius:3px;padding:14px;font-size:13px;color:var(--text);
   }
@@ -244,14 +247,12 @@
   .q-note.warning-note{color:var(--warning);font-weight:600;}
 
   .events-explain{color:var(--text-secondary);font-size:12.5px;margin-bottom:12px;}
-  .event-row{display:grid;grid-template-columns:70px 230px 130px 1fr;gap:12px;padding:9px 0;border-bottom:1px solid var(--border);font-size:13px;align-items:start;}
-  .event-row:last-child{border-bottom:none;}
-  .event-row.event-header{color:var(--text-secondary);font-weight:600;font-size:12.5px;text-transform:uppercase;letter-spacing:.02em;padding-bottom:10px;}
-  .event-time{color:var(--text-secondary);}
-  .event-type{font-weight:600;}
-  .event-num{color:var(--text-secondary);font-variant-numeric:tabular-nums;}
-  .event-row.new-event{animation:eventIn .4s ease;}
-  @keyframes eventIn{from{opacity:0;transform:translateY(-8px);background:#EAF3EF;}to{opacity:1;transform:translateY(0);}}
+  table.events-table th,table.events-table td{text-align:left;padding:9px 12px;border-bottom:1px solid var(--border);font-size:13px;white-space:nowrap;}
+  table.events-table thead th{background:#F0F3F5;color:var(--text-secondary);font-weight:600;font-size:12.5px;}
+  table.events-table tbody tr:last-child td{border-bottom:none;}
+  table.events-table .event-expert{color:var(--text-secondary);}
+  table.events-table tbody tr.new-event{animation:eventIn .4s ease;}
+  @keyframes eventIn{from{opacity:0;background:#EAF3EF;}to{opacity:1;background:transparent;}}
 
   /* ===== Тосты ===== */
   #toast-container{position:fixed;top:16px;right:16px;z-index:200;display:flex;flex-direction:column;gap:10px;max-width:360px;}
@@ -448,6 +449,16 @@ const NO_ASSESSMENT_SHORT = {
   'key-docs-unrecognized': 'Оценка не сформирована — документы распознаны не полностью',
 };
 
+// Краткая причина отказа от оценки для ленты событий (короче, чем в карточке).
+const NO_ASSESSMENT_EVENT_REASON = {
+  'insufficient-data': 'неполнота сведений',
+  'diagnosis-mismatch': 'расхождение в основном диагнозе',
+  'key-docs-unrecognized': 'документы распознаны не полностью',
+};
+
+// Пул экспертов-заглушек для колонки "Эксперт" в ленте событий (перевод трека).
+const EXPERT_POOL = ['Кузнецова Д.В.', 'Иванова Т.Н.', 'Петров А.С.', 'Новикова О.И.', 'Соколов В.П.', 'Морозова К.А.'];
+
 /* =====================================================================
    2. ГЕНЕРАЦИЯ ДАННЫХ (детерминированная, seeded PRNG)
    ===================================================================== */
@@ -513,16 +524,11 @@ function scoreApplication(app) {
   return Math.min(0.98, Math.max(0.02, s));
 }
 
-// Уровень степени влияния фактора для отображения (1 — слабое, 3 — сильное).
-function influenceLevel(weight) {
-  const abs = Math.abs(weight);
-  if (abs >= 0.12) return 3;
-  if (abs >= 0.05) return 2;
-  return 1;
-}
-
-// Отбор до 5 факторов с наибольшим по модулю вкладом (раздел 4, шаг 5 ТЗ).
-// Числовые значения весов не сохраняются для показа — только направление и качественная степень влияния.
+// Полный перечень факторов маршрутизации заявки — не только сильнейшие по
+// модулю вклада, а весь набор признаков, которые модель принимает во внимание
+// (за вычетом нозологии и возрастной группы — см. примечание к FACTOR_LABELS).
+// Порядок фиксированный — совпадает с порядком применения признаков в
+// формуле скоринга, — чтобы карточки было легко сравнивать между собой.
 function computeFactors(app) {
   const dims = [
     ['packageCompleteness', app.packageCompleteness],
@@ -533,22 +539,19 @@ function computeFactors(app) {
     ['contradictions', app.contradictions],
     ['diagnosisConsistency', app.diagnosisConsistency],
   ];
-  const contributions = [];
+  const factors = [];
   for (const [dim, value] of dims) {
     const weight = SCORE_WEIGHTS[dim][value];
     const label = FACTOR_LABELS[dim] && FACTOR_LABELS[dim][value];
     if (weight && Math.abs(weight) > 0.0001 && label) {
-      contributions.push({ dim, weight, label });
+      factors.push({
+        name: FACTOR_NAMES[dim],
+        label,
+        direction: weight > 0 ? 'positive' : 'negative',
+      });
     }
   }
-  contributions.sort((a, b) => Math.abs(b.weight) - Math.abs(a.weight));
-  const top = contributions.slice(0, 5);
-  return top.map((c) => ({
-    name: FACTOR_NAMES[c.dim],
-    label: c.label,
-    direction: c.weight > 0 ? 'positive' : 'negative',
-    level: influenceLevel(c.weight),
-  }));
+  return factors;
 }
 
 // Порядок применения строго последовательный (раздел 4 ТЗ):
@@ -795,36 +798,36 @@ function generateDataset() {
   const quarterFlowStats = buildQuarterFlowStats(rng, computeFlowStatsFromList(applications));
 
   // Начальная лента событий — строится из истории маршрутизации и переводов.
-  const noAssessmentEventDesc = {
-    'insufficient-data': 'Недостаточно данных для анализа',
-    'diagnosis-mismatch': 'Расхождение в основном диагнозе между документами',
-    'key-docs-unrecognized': 'Ключевые документы распознаны не полностью',
-  };
+  // Категория и описание сознательно разведены (не пересказывают друг друга):
+  // категория — короткий тип события, описание — конкретика по этому событию.
   const events = [];
   applications.forEach((a) => {
     const dt = new Date(a.receivedDate);
     dt.setHours(a.receivedTime.h, a.receivedTime.m, 0, 0);
-    let type, description;
+    let category, description;
     if (a.track === 'priority') {
-      type = 'Заявка направлена по нормативному приоритету';
-      description = `Основание: ${a.exclusion}`;
+      category = 'Приоритет';
+      description = 'Заявка направлена по нормативному приоритету';
     } else if (a.reasonCode === 'no-assessment') {
-      type = 'Оценка не сформирована — заявка направлена на полный трек';
-      description = noAssessmentEventDesc[a.noAssessmentReason] || 'Недостаточно данных для анализа';
+      category = 'Отказ от оценки';
+      description = `Оценка не сформирована: ${NO_ASSESSMENT_EVENT_REASON[a.noAssessmentReason]}`;
     } else if (a.track === 'simplified') {
-      type = 'Заявка направлена на упрощённый трек';
-      description = 'Рассмотрение в сокращённом порядке';
+      category = 'Назначение трека';
+      description = 'Заявка направлена на упрощённый трек';
     } else {
-      type = 'Заявка направлена на полный трек';
-      description = 'Рассмотрение в общем порядке';
+      category = 'Назначение трека';
+      description = 'Заявка направлена на полный трек';
     }
-    events.push({ time: dt, type, number: a.number, description });
+    events.push({ time: dt, appId: a.id, appNumber: a.number, category, description, expert: null });
     if (a.transferred) {
+      const reasonDisplay = a.transferReason.charAt(0).toUpperCase() + a.transferReason.slice(1);
       events.push({
         time: a.transferDate ? new Date(a.transferDate.getTime() + a.receivedTime.h * 3600000) : dt,
-        type: 'Эксперт перевёл заявку на полный трек',
-        number: a.number,
-        description: `Причина: ${a.transferReason}`,
+        appId: a.id,
+        appNumber: a.number,
+        category: 'Перевод трека',
+        description: `Упрощённый → Полный · ${reasonDisplay}`,
+        expert: EXPERT_POOL[randInt(rng, 0, EXPERT_POOL.length - 1)],
       });
     }
   });
@@ -986,9 +989,9 @@ function renderHeader() {
 // Эксперт бюро, как и раньше, работает в едином потоке Очередь → Карточка.
 function renderHeadTabs() {
   return `
-    <div class="head-tabs" role="tablist" aria-label="Экраны руководителя">
-      <button type="button" data-action="set-head-tab" data-tab="queue" role="tab" aria-selected="${state.headTab === 'queue'}" class="${state.headTab === 'queue' ? 'active' : ''}">Очередь заявок</button>
-      <button type="button" data-action="set-head-tab" data-tab="monitoring" role="tab" aria-selected="${state.headTab === 'monitoring'}" class="${state.headTab === 'monitoring' ? 'active' : ''}">Мониторинг</button>
+    <div class="head-tabs" role="group" aria-label="Экраны руководителя">
+      <button type="button" data-action="set-head-tab" data-tab="queue" aria-pressed="${state.headTab === 'queue'}" class="${state.headTab === 'queue' ? 'active' : ''}">Очередь заявок</button>
+      <button type="button" data-action="set-head-tab" data-tab="monitoring" aria-pressed="${state.headTab === 'monitoring'}" class="${state.headTab === 'monitoring' ? 'active' : ''}">Мониторинг</button>
     </div>
   `;
 }
@@ -1003,7 +1006,7 @@ function render() {
   } else {
     body = renderHeadTabs() + renderMonitoringScreen();
   }
-  root.innerHTML = `${renderHeader()}<div id="app-body" class="screen-fade">${body}</div>`;
+  root.innerHTML = `${renderHeader()}<main id="app-body" class="screen-fade">${body}</main>`;
   applyCountUps(root);
   attachHandlers();
 }
@@ -1088,6 +1091,7 @@ function renderQueueScreen() {
 
     <div class="table-wrap">
       <table class="queue-table">
+        <caption class="visually-hidden">Список заявок на медико-социальную экспертизу</caption>
         <thead>
           <tr>
             <th>№ заявки</th>
@@ -1101,8 +1105,8 @@ function renderQueueScreen() {
         </thead>
         <tbody>
           ${pageItems.map((a) => `
-            <tr data-action="open-card" data-id="${a.id}" tabindex="0" role="button" aria-label="Открыть заявку ${esc(a.number)}">
-              <td>${esc(a.number)}</td>
+            <tr data-action="open-card-row" data-id="${a.id}">
+              <td><button type="button" class="link-button" data-action="open-card" data-id="${a.id}">${esc(a.number)}</button></td>
               <td>${formatDate(a.receivedDate)}</td>
               <td>${esc(a.examType)}</td>
               <td>${esc(a.ageGroup)}</td>
@@ -1110,7 +1114,7 @@ function renderQueueScreen() {
               <td>
                 <span class="badge ${trackBadgeClass(a)}">${trackBadgeText(a)}</span>
                 ${a.reasonCode === 'no-assessment'
-                  ? `<span class="no-assess-flag" title="${esc(NO_ASSESSMENT_SHORT[a.noAssessmentReason])}">i</span>` : ''}
+                  ? `<span class="no-assess-flag" role="img" aria-label="${esc(NO_ASSESSMENT_SHORT[a.noAssessmentReason])}" title="${esc(NO_ASSESSMENT_SHORT[a.noAssessmentReason])}">i</span>` : ''}
               </td>
               <td>${esc(a.status)}</td>
             </tr>
@@ -1161,11 +1165,33 @@ function trackExplanationLine(a) {
   if (a.transferred) return 'Заявка переведена экспертом на полный трек; рассмотрение проводится в общем порядке';
   if (a.reasonCode === 'no-assessment') return `Рассмотрение в общем порядке. ${NO_ASSESSMENT_SHORT[a.noAssessmentReason]}`;
   if (a.track === 'simplified') return 'Рассмотрение проводится заочно в сокращённом порядке';
-  return 'Рассмотрение в общем порядке; при наличии оснований эксперт назначает очную форму';
+  return 'Рассмотрение в общем порядке.';
 }
 
-function influenceDots(level) {
-  return Array.from({ length: 3 }, (_, i) => `<span class="dot${i < level ? ' filled' : ''}"></span>`).join('');
+// Значки направления фактора. Направление не передаётся только цветом —
+// у значков разная форма (круг со «птичкой» / треугольник с восклицательным
+// знаком), чтобы различие было понятно и без восприятия цвета.
+// В строках таблицы значок — единственный носитель направления в этой
+// строке, поэтому там ему нужна собственная подпись для скринридера;
+// в легенде рядом уже есть текст, поэтому там значок декоративный.
+const FACTOR_DIRECTION_LABEL = {
+  positive: 'Фактор в пользу упрощённого рассмотрения заявки',
+  negative: 'Фактор в пользу полноценного рассмотрения заявки',
+};
+
+function factorIcon(direction, decorative) {
+  const attrs = decorative ? 'aria-hidden="true"' : `role="img" aria-label="${esc(FACTOR_DIRECTION_LABEL[direction])}"`;
+  if (direction === 'positive') {
+    return `<svg class="factor-icon" viewBox="0 0 20 20" ${attrs}>
+      <circle cx="10" cy="10" r="9" style="fill:var(--track-simplified)"/>
+      <path d="M6 10.3l2.6 2.6L14.2 7" fill="none" style="stroke:#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>`;
+  }
+  return `<svg class="factor-icon" viewBox="0 0 20 20" ${attrs}>
+    <path d="M10 2L18.6 17H1.4L10 2Z" style="fill:var(--warning)"/>
+    <rect x="9.25" y="7.3" width="1.5" height="4.4" style="fill:#fff"/>
+    <rect x="9.25" y="12.8" width="1.5" height="1.5" style="fill:#fff"/>
+  </svg>`;
 }
 
 function renderFactorsBlock(a) {
@@ -1177,22 +1203,26 @@ function renderFactorsBlock(a) {
   }
   return `
     <table class="factors-table">
-      <thead><tr><th>Фактор</th><th>Детализация</th><th>Степень влияния</th></tr></thead>
+      <caption class="visually-hidden">Факторы, учтённые при маршрутизации заявки ${esc(a.number)}</caption>
+      <thead><tr><th>Фактор</th><th>Что обнаружено</th></tr></thead>
       <tbody>
         ${a.factors.map((f) => `
           <tr>
             <td class="factor-name">${esc(f.name)}</td>
-            <td>${esc(f.label)}</td>
             <td>
-              <div class="influence ${f.direction}">
-                <span class="influence-dots" aria-hidden="true">${influenceDots(f.level)}</span>
-                <span class="influence-text">${f.direction === 'positive' ? 'В пользу упрощённого рассмотрения' : 'Требует внимания'}</span>
-              </div>
+              <span class="factor-detail">
+                ${factorIcon(f.direction, false)}
+                <span>${esc(f.label)}</span>
+              </span>
             </td>
           </tr>
         `).join('')}
       </tbody>
     </table>
+    <div class="factors-legend">
+      <span class="legend-item">${factorIcon('positive', true)}${esc(FACTOR_DIRECTION_LABEL.positive)}</span>
+      <span class="legend-item">${factorIcon('negative', true)}${esc(FACTOR_DIRECTION_LABEL.negative)}</span>
+    </div>
   `;
 }
 
@@ -1211,27 +1241,31 @@ function renderCardScreen() {
     <div class="panel">
       <div class="card-header-block">
         <div class="meta">
-          <div class="app-number">${esc(a.number)}</div>
+          <h1 class="app-number">${esc(a.number)}</h1>
           <div class="app-date">Дата поступления: ${formatDate(a.receivedDate)}</div>
         </div>
-        <span class="badge badge-lg ${trackBadgeClass(a)}">${trackBadgeText(a)}</span>
+        <div class="track-badge-wrap">
+          <span class="track-badge-label">Назначенный трек</span>
+          <span class="badge badge-lg ${trackBadgeClass(a)}">${trackBadgeText(a)}</span>
+        </div>
       </div>
       <div class="card-track-explain ${a.track === 'priority' ? 'priority-note' : ''}">${trackExplanationLine(a)}</div>
     </div>
 
     <div class="panel">
       <h2 class="block-title">Сведения по заявке</h2>
-      <div class="field-grid">
+      <dl class="field-grid">
         ${FIELD_DEFS.map(([label, fn]) => `
-          <div class="field-row"><span class="field-name">${label}</span><span class="field-value">${esc(fn(a))}</span></div>
+          <div class="field-row"><dt class="field-name">${label}</dt><dd class="field-value">${esc(fn(a))}</dd></div>
         `).join('')}
-      </div>
+      </dl>
     </div>
 
     <div class="panel">
       <h2 class="block-title">Приложенные документы</h2>
       <div class="docs-summary">Документов: ${a.documents.length} · Распознано: ${recognizedCount} · Не распознано: ${failedCount}</div>
       <table class="docs-table">
+        <caption class="visually-hidden">Приложенные документы заявки ${esc(a.number)}</caption>
         <thead>
           <tr><th>Наименование</th><th>Формат</th><th>Дата</th><th>Объём (стр.)</th><th>Статус обработки</th></tr>
         </thead>
@@ -1239,8 +1273,8 @@ function renderCardScreen() {
           ${a.documents.map((d, i) => {
             const isKeyIssue = KEY_DOC_NAMES.includes(d.name) && d.status !== 'Распознан';
             return `
-            <tr class="${isKeyIssue ? 'key-doc-issue' : ''}" data-action="open-doc-stub" data-idx="${i}" tabindex="0" role="button" aria-label="Открыть документ ${esc(d.name)}">
-              <td>${esc(d.name)}${isKeyIssue ? '<span class="key-doc-tag">Ключевой</span>' : ''}</td>
+            <tr class="${isKeyIssue ? 'key-doc-issue' : ''}" data-action="open-doc-stub-row" data-idx="${i}">
+              <td><button type="button" class="link-button" data-action="open-doc-stub" data-idx="${i}">${esc(d.name)}</button>${isKeyIssue ? '<span class="key-doc-tag">Ключевой</span>' : ''}</td>
               <td>${esc(d.format)}</td>
               <td>${formatDate(d.date)}</td>
               <td>${d.pages}</td>
@@ -1253,17 +1287,17 @@ function renderCardScreen() {
     </div>
 
     <div class="panel">
-      <h2 class="block-title">Факторы, повлиявшие на выбор трека</h2>
+      <h2 class="block-title">Факторы маршрутизации заявки</h2>
       ${renderFactorsBlock(a)}
-      <div class="card-footnote">Модуль определяет порядок рассмотрения заявки. Решение по существу принимается экспертом.</div>
-      ${state.role === 'expert' ? `
-        <div class="card-action">
-          <button type="button" class="btn btn-primary" data-action="open-transfer-modal" data-id="${a.id}" ${canTransfer ? '' : 'disabled'}>
-            ${a.transferred ? 'Заявка переведена на полный трек' : 'Перевести на полный трек'}
-          </button>
-        </div>
-      ` : ''}
     </div>
+
+    ${state.role === 'expert' ? `
+      <div class="panel">
+        <button type="button" class="btn btn-primary" data-action="open-transfer-modal" data-id="${a.id}" ${canTransfer ? '' : 'disabled'}>
+          ${a.transferred ? 'Заявка переведена на полный трек' : 'Перевести на полный трек'}
+        </button>
+      </div>
+    ` : ''}
 
     ${renderStubPanel(a)}
     ${state.role === 'expert' ? renderTransferModal() : ''}
@@ -1288,9 +1322,9 @@ function renderStubPanel(a) {
 function renderTransferModal() {
   const open = state.transferModalAppId !== null;
   return `
-    <div class="modal-overlay ${open ? 'open' : ''}" role="dialog" aria-modal="true" aria-hidden="${!open}">
+    <div class="modal-overlay ${open ? 'open' : ''}" role="dialog" aria-modal="true" aria-labelledby="transfer-modal-title" aria-hidden="${!open}">
       <div class="modal-box">
-        <h3>Перевод заявки на полный трек</h3>
+        <h3 id="transfer-modal-title">Перевод заявки на полный трек</h3>
         <label for="transfer-reason">Причина перевода</label>
         <select id="transfer-reason">
           <option value="требуется дообследование">Требуется дообследование</option>
@@ -1397,21 +1431,26 @@ function renderQualityBlock() {
 
 function renderEventsBlock() {
   return `
-    <div class="events-explain">Журнал фиксирует все назначения треков и действия экспертов. При автоматической маршрутизации журнал является основным источником контроля качества.</div>
-    <div class="event-row event-header">
-      <div>Время</div>
-      <div>Тип события</div>
-      <div>№ заявки</div>
-      <div>Описание</div>
+    <div class="events-explain">Журнал фиксирует все назначения треков и действия экспертов.</div>
+    <div class="table-wrap">
+      <table class="events-table">
+        <caption class="visually-hidden">Лента событий маршрутизации заявок</caption>
+        <thead>
+          <tr><th>Время</th><th>№ заявки</th><th>Тип события</th><th>Описание</th><th>Эксперт</th></tr>
+        </thead>
+        <tbody>
+          ${state.events.map((e, i) => `
+            <tr class="${i === 0 && e.isNew ? 'new-event' : ''}">
+              <td>${formatDateTime(e.time)}</td>
+              <td><button type="button" class="link-button" data-action="open-card" data-id="${e.appId}">${esc(e.appNumber)}</button></td>
+              <td>${esc(e.category)}</td>
+              <td>${esc(e.description)}</td>
+              <td class="event-expert">${e.expert ? esc(e.expert) : '—'}</td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
     </div>
-    ${state.events.map((e, i) => `
-      <div class="event-row ${i === 0 && e.isNew ? 'new-event' : ''}">
-        <div class="event-time">${formatDateTime(e.time)}</div>
-        <div class="event-type">${esc(e.type)}</div>
-        <div class="event-num">${esc(e.number)}</div>
-        <div class="event-desc">${esc(e.description)}</div>
-      </div>
-    `).join('')}
   `;
 }
 
@@ -1508,10 +1547,30 @@ function attachHandlers() {
     });
   });
 
+  // data-action="open-card" встречается и в очереди, и в ленте событий мониторинга —
+  // клик открывает карточку поверх текущего экрана в любом случае. headTab сбрасывается
+  // в 'queue', иначе у руководителя карточка "откроется" под всё ещё видимым мониторингом.
   root.querySelectorAll('[data-action="open-card"]').forEach((row) => {
-    const open = () => { state.selectedAppId = Number(row.dataset.id); state.screen = 'card'; state.stubPanelOpen = false; render(); };
+    const open = () => {
+      state.selectedAppId = Number(row.dataset.id);
+      state.screen = 'card';
+      state.headTab = 'queue';
+      state.stubPanelOpen = false;
+      render();
+    };
     row.addEventListener('click', open);
     row.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(); } });
+  });
+
+  // Клик в любом месте строки очереди (не только по номеру заявки) тоже открывает карточку.
+  root.querySelectorAll('[data-action="open-card-row"]').forEach((row) => {
+    row.addEventListener('click', (e) => {
+      if (e.target.closest('[data-action="open-card"]')) return; // избегаем двойного рендера
+      state.selectedAppId = Number(row.dataset.id);
+      state.screen = 'card';
+      state.stubPanelOpen = false;
+      render();
+    });
   });
 
   const back = root.querySelector('[data-action="back-to-queue"]');
@@ -1557,10 +1616,23 @@ function attachHandlers() {
   });
 
   root.querySelectorAll('[data-action="open-doc-stub"]').forEach((row) => {
-    const open = () => { state.stubPanelOpen = Number(row.dataset.idx); render(); };
+    const open = () => {
+      state.stubPanelOpen = Number(row.dataset.idx);
+      render();
+      showToast('info', 'Просмотр документа доступен в основном интерфейсе ЕАВИИАС МСЭ');
+    };
     row.addEventListener('click', open);
     row.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(); } });
-    row.addEventListener('click', () => showToast('info', 'Просмотр документа доступен в основном интерфейсе ЕАВИИАС МСЭ'));
+  });
+
+  // Клик в любом месте строки документа (не только по названию) тоже открывает панель.
+  root.querySelectorAll('[data-action="open-doc-stub-row"]').forEach((row) => {
+    row.addEventListener('click', (e) => {
+      if (e.target.closest('[data-action="open-doc-stub"]')) return;
+      state.stubPanelOpen = Number(row.dataset.idx);
+      render();
+      showToast('info', 'Просмотр документа доступен в основном интерфейсе ЕАВИИАС МСЭ');
+    });
   });
   root.querySelectorAll('[data-action="close-stub"]').forEach((el) => {
     el.addEventListener('click', () => { state.stubPanelOpen = false; render(); });
@@ -1600,11 +1672,14 @@ function attachHandlers() {
       app.status = 'Переведена на полный трек';
       app.transferReason = reason;
       app.transferDate = new Date();
+      const reasonDisplay = reason.charAt(0).toUpperCase() + reason.slice(1);
       state.events.unshift({
         time: new Date(),
-        type: 'Эксперт перевёл заявку на полный трек',
-        number: app.number,
-        description: `Причина: ${reason}`,
+        appId: app.id,
+        appNumber: app.number,
+        category: 'Перевод трека',
+        description: `Упрощённый → Полный · ${reasonDisplay}`,
+        expert: 'Смирнова Е.А.',
         isNew: true,
       });
       state.events = state.events.slice(0, CONFIG.EVENTS_VISIBLE);
