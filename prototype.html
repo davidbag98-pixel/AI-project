@@ -100,6 +100,10 @@
   .link-button{
     background:none;border:none;padding:0;margin:0;font:inherit;color:var(--accent);cursor:pointer;text-decoration:underline;
   }
+  /* В очереди заявок номер не подчёркнут — кликабельность там очевидна по всей строке;
+     подчёркивание оставлено только там, где ссылка — единственный кликабельный элемент (лента событий). */
+  .link-button.link-button-plain{text-decoration:none;}
+  .link-button.link-button-plain:hover{text-decoration:underline;}
 
   .badge{display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:3px;font-size:12.5px;font-weight:600;white-space:nowrap;}
   .badge.badge-simplified{background:var(--track-simplified-bg);color:var(--track-simplified);}
@@ -194,6 +198,7 @@
   .modal-overlay.open{opacity:1;pointer-events:auto;}
   .modal-box{background:#fff;border-radius:3px;padding:24px;width:420px;box-shadow:0 4px 24px rgba(0,0,0,.18);}
   .modal-box h3{margin:0 0 14px;font-size:16px;}
+  .modal-box p{margin:0 0 18px;font-size:13px;color:var(--text-secondary);}
   .modal-box label{display:block;font-size:12.5px;color:var(--text-secondary);margin-bottom:6px;}
   .modal-box select,.modal-box input[type=text]{width:100%;border:1px solid var(--border);border-radius:3px;padding:9px 10px;margin-bottom:18px;}
   .modal-actions{display:flex;justify-content:flex-end;gap:10px;}
@@ -283,7 +288,7 @@
    ===================================================================== */
 
 const CONFIG = {
-  SEED: 4874,                     // сид генератора псевдослучайных чисел (детерминированный датасет)
+  SEED: 4388,                     // сид генератора псевдослучайных чисел (детерминированный датасет)
   TOTAL_APPLICATIONS: 240,
   PAGE_SIZE: 25,
   THRESHOLD: 0.82,                // порог маршрутизации (см. раздел 4, шаг 4 ТЗ)
@@ -304,7 +309,7 @@ const CONFIG = {
 const SCORE_BASE = 0.50;
 const SCORE_WEIGHTS = {
   packageCompleteness: { 'Полный': 0.14, 'Есть замечания': 0.00, 'Неполный': 0.00 },
-  examinations: { 'В полном объёме': 0.12, 'Частично': -0.06, 'Отсутствуют': 0.00 },
+  examinations: { 'В полном объёме': 0.12, 'Частично, требуется дообследование': -0.06 },
   examAge: { 'до 3 месяцев': 0.08, '3–6 месяцев': 0.00, 'более 6 месяцев': -0.10 },
   examTypeCombined: {
     'Повторное, группа не менялась': 0.10,
@@ -349,9 +354,12 @@ const GEN_PROBABILITIES = {
     ['Прочие', 0.08],
   ],
   pkg: [['Полный', 0.46], ['Есть замечания', 0.50], ['Неполный', 0.04]],
-  examIfNepolny: [['Отсутствуют', 0.55], ['Частично', 0.45]],
-  examIfZamechaniya: [['Частично', 0.61], ['В полном объёме', 0.38], ['Отсутствуют', 0.01]],
-  examIfPolny: [['В полном объёме', 0.78], ['Частично', 0.22]],
+  // "Достаточность обследований" больше не имеет значения "Отсутствуют" — этот
+  // случай теперь целиком покрывается "Неполный" пакет документов (см. Шаг 2).
+  // Условной завязки на Неполный не требуется: такая заявка в любом случае
+  // уходит в отказ от оценки по признаку пакета документов, до расчёта балла.
+  examIfPolny: [['В полном объёме', 0.85], ['Частично, требуется дообследование', 0.15]],
+  examIfOther: [['В полном объёме', 0.50], ['Частично, требуется дообследование', 0.50]],
   examAge: [['до 3 месяцев', 0.20], ['3–6 месяцев', 0.38], ['более 6 месяцев', 0.42]],
   referralForm: [['Электронное (СЭМД)', 0.65], ['Скан-копия', 0.35]],
   orgCount: [['1', 0.40], ['2', 0.36], ['3 и более', 0.24]],
@@ -379,12 +387,12 @@ const GEN_PROBABILITIES = {
 // пропадающих из-за того, что конкретное значение не двигает балл.
 const FACTOR_LABELS = {
   packageCompleteness: {
-    'Полный': 'Пакет документов представлен в полном объёме',
+    'Полный': 'Все обязательные документы приложены',
     'Есть замечания': 'Пакет документов подан с замечаниями',
   },
   examinations: {
-    'В полном объёме': 'Результаты необходимых обследований приложены',
-    'Частично': 'Результаты обследований приложены частично',
+    'В полном объёме': 'Результаты обследований достаточны для оценки степени нарушений',
+    'Частично, требуется дообследование': 'Требуется дообследование — объём обследований недостаточен',
   },
   examAge: {
     'до 3 месяцев': 'Давность результатов обследований не превышает 3 месяцев',
@@ -414,7 +422,7 @@ const FACTOR_LABELS = {
 // Короткие названия факторов — колонка «Фактор» в блоке обоснования трека.
 const FACTOR_NAMES = {
   packageCompleteness: 'Полнота пакета документов',
-  examinations: 'Результаты обследований',
+  examinations: 'Достаточность обследований',
   examAge: 'Давность обследований',
   examTypeCombined: 'Тип освидетельствования',
   orgCount: 'Число медорганизаций',
@@ -466,6 +474,94 @@ const NO_ASSESSMENT_EVENT_REASON = {
 
 // Пул экспертов-заглушек для колонки "Эксперт" в ленте событий (перевод трека).
 const EXPERT_POOL = ['Кузнецова Д.В.', 'Иванова Т.Н.', 'Петров А.С.', 'Новикова О.И.', 'Соколов В.П.', 'Морозова К.А.'];
+
+// Пул синтетических ФИО заявителей (полные, без сокращений). Строится один
+// раз из базовых списков фамилий/имён-отчеств — 20 фамилий × 2 варианта
+// имени-отчества × 2 пола = 80 уникальных комбинаций.
+const APPLICANT_SURNAME_STEMS = [
+  'Иванов', 'Смирнов', 'Кузнецов', 'Попов', 'Соколов', 'Лебедев', 'Козлов', 'Новиков',
+  'Морозов', 'Петров', 'Волков', 'Соловьёв', 'Васильев', 'Зайцев', 'Павлов', 'Семёнов',
+  'Голубев', 'Виноградов', 'Богданов', 'Воробьёв',
+];
+const APPLICANT_GIVEN_MALE = [
+  'Александр Иванович', 'Дмитрий Сергеевич', 'Сергей Николаевич', 'Андрей Владимирович',
+  'Алексей Петрович', 'Михаил Александрович', 'Николай Дмитриевич', 'Виктор Иванович',
+  'Владимир Сергеевич', 'Игорь Николаевич',
+];
+const APPLICANT_GIVEN_FEMALE = [
+  'Елена Ивановна', 'Ольга Сергеевна', 'Наталья Владимировна', 'Татьяна Петровна',
+  'Марина Александровна', 'Ирина Николаевна', 'Светлана Дмитриевна', 'Юлия Викторовна',
+  'Анна Сергеевна', 'Мария Николаевна',
+];
+const APPLICANT_NAME_POOL = (function buildApplicantNamePool() {
+  const pool = [];
+  APPLICANT_SURNAME_STEMS.forEach((stem, i) => {
+    pool.push(`${stem} ${APPLICANT_GIVEN_MALE[i % APPLICANT_GIVEN_MALE.length]}`);
+    pool.push(`${stem} ${APPLICANT_GIVEN_MALE[(i + 3) % APPLICANT_GIVEN_MALE.length]}`);
+    pool.push(`${stem}а ${APPLICANT_GIVEN_FEMALE[i % APPLICANT_GIVEN_FEMALE.length]}`);
+    pool.push(`${stem}а ${APPLICANT_GIVEN_FEMALE[(i + 3) % APPLICANT_GIVEN_FEMALE.length]}`);
+  });
+  return pool; // 80 уникальных комбинаций
+})();
+
+// Типовые формулировки основного диагноза по группам нозологий (3–5 на группу,
+// согласованы с полем "Группа нозологий" — диагноз всегда относится к своей группе).
+const DIAGNOSIS_BY_NOSOLOGY = {
+  'Онкологические заболевания': [
+    'Злокачественное новообразование молочной железы',
+    'Злокачественное новообразование ободочной кишки',
+    'Злокачественное новообразование предстательной железы',
+    'Злокачественное новообразование лёгкого',
+    'Лимфома неуточнённая',
+  ],
+  'Болезни системы кровообращения': [
+    'Ишемическая болезнь сердца, стенокардия напряжения',
+    'Гипертоническая болезнь III стадии',
+    'Последствия перенесённого острого нарушения мозгового кровообращения',
+    'Хроническая сердечная недостаточность',
+    'Атеросклероз сосудов нижних конечностей',
+  ],
+  'Болезни костно-мышечной системы': [
+    'Остеоартроз коленных суставов',
+    'Ревматоидный артрит',
+    'Остеохондроз позвоночника с корешковым синдромом',
+    'Последствия перелома шейки бедра',
+    'Анкилозирующий спондилит',
+  ],
+  'Болезни нервной системы': [
+    'Рассеянный склероз',
+    'Последствия перенесённого ишемического инсульта',
+    'Эпилепсия с частыми приступами',
+    'Болезнь Паркинсона',
+    'Полинейропатия нижних конечностей',
+  ],
+  'Эндокринные заболевания': [
+    'Сахарный диабет 2 типа, тяжёлое течение',
+    'Сахарный диабет 1 типа с осложнениями',
+    'Диффузный токсический зоб',
+    'Гипотиреоз тяжёлой степени',
+    'Ожирение 3 степени с осложнениями',
+  ],
+  'Психические расстройства': [
+    'Шизофрения, параноидная форма',
+    'Органическое расстройство личности',
+    'Умственная отсталость умеренной степени',
+    'Биполярное аффективное расстройство',
+    'Деменция при болезни Альцгеймера',
+  ],
+  'Прочие': [
+    'Хроническая болезнь почек 4 стадии',
+    'Хроническая обструктивная болезнь лёгких, тяжёлое течение',
+    'Последствия травмы органа зрения со значительным снижением остроты зрения',
+    'Бронхиальная астма тяжёлого течения',
+    'Цирроз печени',
+  ],
+};
+
+function pickMainDiagnosis(rng, nosology) {
+  const options = DIAGNOSIS_BY_NOSOLOGY[nosology];
+  return options[randInt(rng, 0, options.length - 1)];
+}
 
 /* =====================================================================
    2. ГЕНЕРАЦИЯ ДАННЫХ (детерминированная, seeded PRNG)
@@ -570,7 +666,6 @@ function assignTrack(app) {
   }
   if (
     app.packageCompleteness === 'Неполный' ||
-    app.examinations === 'Отсутствуют' ||
     (app.contradictions === 'Выявлены' && app.referralForm === 'Скан-копия')
   ) {
     return { track: 'full', reasonCode: 'no-assessment', noAssessmentReason: 'insufficient-data' };
@@ -589,6 +684,33 @@ function assignTrack(app) {
     return { track: 'simplified', reasonCode: 'score', score };
   }
   return { track: 'full', reasonCode: 'score', score };
+}
+
+// Статус рассмотрения заявки — самостоятельное измерение, не связанное с
+// треком: "Ожидает рассмотрения" / "На рассмотрении" / "Принято решение".
+// Только заявки со статусом "Ожидает рассмотрения" открываются в карточке —
+// это единственный статус, за который в прототипе отвечает данный модуль
+// (сам ход рассмотрения и формирование протокола — вне периметра работы).
+const REVIEW_STATUS = {
+  PENDING: 'Ожидает рассмотрения',
+  IN_REVIEW: 'На рассмотрении',
+  DECIDED: 'Принято решение',
+};
+
+function pickReviewStatus(rng, daysAgo) {
+  if (daysAgo <= 9) {
+    return weightedChoice(rng, [
+      [REVIEW_STATUS.PENDING, 0.75], [REVIEW_STATUS.IN_REVIEW, 0.20], [REVIEW_STATUS.DECIDED, 0.05],
+    ]);
+  }
+  if (daysAgo <= 19) {
+    return weightedChoice(rng, [
+      [REVIEW_STATUS.PENDING, 0.45], [REVIEW_STATUS.IN_REVIEW, 0.35], [REVIEW_STATUS.DECIDED, 0.20],
+    ]);
+  }
+  return weightedChoice(rng, [
+    [REVIEW_STATUS.PENDING, 0.20], [REVIEW_STATUS.IN_REVIEW, 0.30], [REVIEW_STATUS.DECIDED, 0.50],
+  ]);
 }
 
 // Согласованность диагноза между направлением и приложенными документами.
@@ -636,15 +758,14 @@ function generateDocuments(rng, app, refDate) {
   };
 
   // Всегда присутствуют: базовые документы + ключевые (направление, заключение
-  // специалиста; результаты обследований — если они вообще проводились)
+  // специалиста; результаты обследований). Единственный случай отсутствия
+  // документов в пакете — "Неполный" пакет (см. правило ниже).
   pushDoc(DOC_NAMES.referral, { format: app.referralForm === 'Скан-копия' ? 'Скан-копия PDF' : 'СЭМД' });
   pushDoc(DOC_NAMES.application);
   pushDoc(DOC_NAMES.consent);
   pushDoc(DOC_NAMES.specialist);
-  if (app.examinations !== 'Отсутствуют') {
-    pushDoc(DOC_NAMES.lab);
-    pushDoc(DOC_NAMES.instrumental);
-  }
+  pushDoc(DOC_NAMES.lab);
+  pushDoc(DOC_NAMES.instrumental);
 
   // Прочий документ — присутствует не всегда (не влияет на решение об оценке)
   if (rng() < 0.6) pushDoc(DOC_NAMES.extract);
@@ -694,15 +815,13 @@ function buildApplication(index, rng, today) {
 
   app.ageGroup = weightedChoice(rng, GEN_PROBABILITIES.ageGroup);
   app.nosology = weightedChoice(rng, GEN_PROBABILITIES.nosology);
+  app.mainDiagnosis = pickMainDiagnosis(rng, app.nosology);
+  app.applicantName = APPLICANT_NAME_POOL[randInt(rng, 0, APPLICANT_NAME_POOL.length - 1)];
 
   app.packageCompleteness = weightedChoice(rng, GEN_PROBABILITIES.pkg);
-  if (app.packageCompleteness === 'Неполный') {
-    app.examinations = weightedChoice(rng, GEN_PROBABILITIES.examIfNepolny);
-  } else if (app.packageCompleteness === 'Есть замечания') {
-    app.examinations = weightedChoice(rng, GEN_PROBABILITIES.examIfZamechaniya);
-  } else {
-    app.examinations = weightedChoice(rng, GEN_PROBABILITIES.examIfPolny);
-  }
+  app.examinations = app.packageCompleteness === 'Полный'
+    ? weightedChoice(rng, GEN_PROBABILITIES.examIfPolny)
+    : weightedChoice(rng, GEN_PROBABILITIES.examIfOther);
 
   app.examAge = weightedChoice(rng, GEN_PROBABILITIES.examAge);
   app.referralForm = weightedChoice(rng, GEN_PROBABILITIES.referralForm);
@@ -724,7 +843,11 @@ function buildApplication(index, rng, today) {
 
   app.form = app.track === 'full' ? weightedChoice(rng, GEN_PROBABILITIES.onsiteForm) : null;
 
-  app.status = 'Ожидает рассмотрения';
+  // Статус рассмотрения не зависит от трека и не меняется переводом на полный
+  // трек (перевод — это смена трека, а не стадии рассмотрения). Чем "старше"
+  // заявка в пределах отчётного месяца, тем выше шанс, что она уже в работе
+  // или по ней принято решение.
+  app.status = pickReviewStatus(rng, app.receivedDaysAgo);
   app.transferred = false;
   app.transferReason = null;
   app.transferDate = null;
@@ -733,7 +856,7 @@ function buildApplication(index, rng, today) {
 }
 
 function buildDurationStats(rng) {
-  const periods = ['week', 'month', 'quarter'];
+  const periods = ['week', 'month', 'quarter', 'year'];
   const tracks = ['simplified', 'fullOffsite', 'fullOnsite'];
   const stats = {};
   for (const period of periods) {
@@ -765,8 +888,8 @@ function computeFlowStatsFromList(apps) {
 // уже закрыты и не висят в очереди. Поэтому квартал — самостоятельная,
 // детерминированно сгенерированная агрегированная сводка (по аналогии со
 // сроками рассмотрения), а не фильтр по очереди.
-function buildQuarterFlowStats(rng, monthStats) {
-  const scale = 2.8 + rng() * 0.4;
+function buildScaledFlowStats(rng, monthStats, scaleBase, scaleJitter) {
+  const scale = scaleBase + (rng() - 0.5) * scaleJitter;
   const total = Math.round(monthStats.total * scale);
   const simplifiedShare = Math.min(0.32, Math.max(0.20, monthStats.simplified / monthStats.total + (rng() - 0.5) * 0.03));
   const priorityShare = Math.min(0.07, Math.max(0.03, monthStats.priority / monthStats.total + (rng() - 0.5) * 0.015));
@@ -796,13 +919,17 @@ function generateDataset() {
   const preTransferred = shuffle(rng, simplifiedApps).slice(0, CONFIG.PRE_TRANSFERRED_COUNT);
   preTransferred.forEach((a, idx) => {
     a.transferred = true;
-    a.status = 'Переведена на полный трек';
     a.transferReason = weightedChoice(rng, GEN_PROBABILITIES.transferReason);
     a.transferDate = addDays(a.receivedDate, randInt(rng, 1, 5));
   });
 
   const durationStats = buildDurationStats(rng);
-  const quarterFlowStats = buildQuarterFlowStats(rng, computeFlowStatsFromList(applications));
+  const monthFlowBaseline = computeFlowStatsFromList(applications);
+  const quarterFlowStats = buildScaledFlowStats(rng, monthFlowBaseline, 3.0, 0.4);
+  // "Год" — та же логика синтетической агрегации, что и "Квартал" (см. комментарий
+  // выше): за пределами отчётного месяца в очереди нет и не может быть реальных
+  // заявок, все они уже закрыты.
+  const yearFlowStats = buildScaledFlowStats(rng, monthFlowBaseline, 12.0, 1.0);
 
   // Начальная лента событий — строится из истории маршрутизации и переводов.
   // Категория и описание сознательно разведены (не пересказывают друг друга):
@@ -844,6 +971,7 @@ function generateDataset() {
     applications,
     durationStats,
     quarterFlowStats,
+    yearFlowStats,
     events: events.slice(0, CONFIG.EVENTS_VISIBLE),
   };
 }
@@ -881,6 +1009,7 @@ const state = {
   applications: dataset.applications,
   durationStats: dataset.durationStats,
   quarterFlowStats: dataset.quarterFlowStats,
+  yearFlowStats: dataset.yearFlowStats,
   events: dataset.events,
   role: 'expert',            // 'expert' | 'head'
   screen: 'queue',           // 'queue' | 'card'
@@ -889,9 +1018,10 @@ const state = {
   filters: { track: 'all', type: 'all', search: '' },
   sort: { field: 'date', dir: 'desc' },
   page: 1,
-  monitoringPeriod: 'month', // 'week' | 'month' | 'quarter'
+  monitoringPeriod: 'month', // 'week' | 'month' | 'quarter' | 'year'
   stubPanelOpen: false,
   transferModalAppId: null,
+  infoModalOpen: false,
 };
 
 let toastSeq = 0;
@@ -1013,7 +1143,7 @@ function render() {
   } else {
     body = renderHeadTabs() + renderMonitoringScreen();
   }
-  root.innerHTML = `${renderHeader()}<main id="app-body" class="screen-fade">${body}</main>`;
+  root.innerHTML = `${renderHeader()}<main id="app-body" class="screen-fade">${body}</main>${renderInfoModal()}`;
   applyCountUps(root);
   attachHandlers();
 }
@@ -1113,7 +1243,7 @@ function renderQueueScreen() {
         <tbody>
           ${pageItems.map((a) => `
             <tr data-action="open-card-row" data-id="${a.id}">
-              <td><button type="button" class="link-button" data-action="open-card" data-id="${a.id}">${esc(a.number)}</button></td>
+              <td><button type="button" class="link-button link-button-plain" data-action="open-card" data-id="${a.id}">${esc(a.number)}</button></td>
               <td>${formatDate(a.receivedDate)}</td>
               <td>${esc(a.examType)}</td>
               <td>${esc(a.ageGroup)}</td>
@@ -1145,21 +1275,21 @@ function renderQueueScreen() {
    8. РЕНДЕР: КАРТОЧКА ЗАЯВКИ (роль: эксперт бюро)
    ===================================================================== */
 
+// Поля, дублирующие блок "Факторы маршрутизации заявки" (полнота пакета,
+// достаточность обследований, давность, число медорганизаций, противоречия,
+// согласованность диагноза), намеренно не показаны здесь во второй раз —
+// они остаются в модели данных и в скоринге, отображаются только в факторах.
 const FIELD_DEFS = [
   ['Номер заявки', (a) => a.number],
+  ['ФИО заявителя', (a) => a.applicantName],
   ['Дата поступления', (a) => formatDate(a.receivedDate)],
   ['Тип освидетельствования', (a) => a.examType],
   ['Возрастная группа', (a) => a.ageGroup],
   ['Группа нозологий', (a) => a.nosology],
-  ['Полнота пакета документов', (a) => a.packageCompleteness],
-  ['Результаты необходимых обследований', (a) => a.examinations],
-  ['Давность обследований', (a) => a.examAge],
+  ['Основной диагноз', (a) => a.mainDiagnosis],
   ['Форма направления', (a) => a.referralForm],
-  ['Число медорганизаций в анамнезе', (a) => a.orgCount],
   ['Предыдущие освидетельствования', (a) => a.prevExamStatus],
-  ['Противоречия в документах', (a) => a.contradictions],
   ['Нормативное исключение', (a) => a.exclusion],
-  ['Согласованность диагноза', (a) => a.diagnosisConsistency],
 ];
 
 function docStatusMarkup(status) {
@@ -1171,7 +1301,7 @@ function trackExplanationLine(a) {
   if (a.track === 'priority') return 'Нормативно установленный сокращённый срок рассмотрения';
   if (a.transferred) return 'Заявка переведена экспертом на полный трек; рассмотрение проводится в общем порядке';
   if (a.reasonCode === 'no-assessment') return `Рассмотрение в общем порядке. ${NO_ASSESSMENT_SHORT[a.noAssessmentReason]}`;
-  if (a.track === 'simplified') return 'Рассмотрение проводится заочно в сокращённом порядке';
+  if (a.track === 'simplified') return 'Рассмотрение проводится заочно в упрощённом порядке';
   return 'Рассмотрение в общем порядке.';
 }
 
@@ -1363,6 +1493,26 @@ function renderTransferModal() {
   `;
 }
 
+// Заявки со статусом "На рассмотрении"/"Принято решение" кликабельны в
+// очереди и в ленте событий, но карточка для них не открывается — вместо
+// этого показывается это окно. Дальнейшая работа с такой заявкой (ход
+// рассмотрения, протокол) — часть основного интерфейса ЕАВИИАС МСЭ и
+// сознательно оставлена вне периметра прототипа маршрутизации.
+function renderInfoModal() {
+  const open = state.infoModalOpen === true;
+  return `
+    <div class="modal-overlay ${open ? 'open' : ''}" role="dialog" aria-modal="true" aria-labelledby="info-modal-title" aria-hidden="${!open}">
+      <div class="modal-box">
+        <h3 id="info-modal-title">Заявка недоступна для просмотра</h3>
+        <p>Просмотр заявки доступен в полной версии системы.</p>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-primary" data-action="close-info-modal">Понятно</button>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
 /* =====================================================================
    9. РЕНДЕР: МОНИТОРИНГ (роль: руководитель бюро) + SVG-визуализации
    ===================================================================== */
@@ -1372,6 +1522,7 @@ function renderTransferModal() {
 // заявки прошлых месяцев уже закрыты и не хранятся в этой же очереди.
 function getFlowStats(period) {
   if (period === 'quarter') return state.quarterFlowStats;
+  if (period === 'year') return state.yearFlowStats;
   const limit = period === 'week' ? 7 : 30;
   return computeFlowStatsFromList(state.applications.filter((a) => a.receivedDaysAgo <= limit));
 }
@@ -1479,7 +1630,7 @@ function renderMonitoringScreen() {
   const transferredInPeriod = state.applications.filter((a) => a.transferred).length;
   const simplifiedBase = state.applications.filter((a) => a.track === 'simplified').length;
 
-  const periodLabel = { week: 'неделю', month: 'месяц', quarter: 'квартал' }[state.monitoringPeriod];
+  const periodLabel = { week: 'неделю', month: 'месяц', quarter: 'квартал', year: 'год' }[state.monitoringPeriod];
 
   return `
     <h1 class="screen-title">Мониторинг</h1>
@@ -1488,6 +1639,7 @@ function renderMonitoringScreen() {
         <button type="button" data-action="set-period" data-period="week" class="${state.monitoringPeriod === 'week' ? 'active' : ''}">Неделя</button>
         <button type="button" data-action="set-period" data-period="month" class="${state.monitoringPeriod === 'month' ? 'active' : ''}">Месяц</button>
         <button type="button" data-action="set-period" data-period="quarter" class="${state.monitoringPeriod === 'quarter' ? 'active' : ''}">Квартал</button>
+        <button type="button" data-action="set-period" data-period="year" class="${state.monitoringPeriod === 'year' ? 'active' : ''}">Год</button>
       </div>
       <div class="threshold-line">Порог маршрутизации: 0,82 · установлен ${CONFIG.THRESHOLD_SET_DATE}</div>
     </div>
@@ -1569,16 +1721,28 @@ function attachHandlers() {
   });
 
   // data-action="open-card" встречается и в очереди, и в ленте событий мониторинга —
-  // клик открывает карточку поверх текущего экрана в любом случае. headTab сбрасывается
-  // в 'queue', иначе у руководителя карточка "откроется" под всё ещё видимым мониторингом.
-  root.querySelectorAll('[data-action="open-card"]').forEach((row) => {
-    const open = () => {
-      state.selectedAppId = Number(row.dataset.id);
-      state.screen = 'card';
-      state.headTab = 'queue';
-      state.stubPanelOpen = false;
+  // клик открывает карточку поверх текущего экрана. Заявки, по которым уже
+  // идёт рассмотрение или принято решение, не открываются — показывается
+  // информационное окно (см. renderInfoModal): дальнейший ход рассмотрения
+  // вне периметра этого модуля. headTab сбрасывается в 'queue', иначе у
+  // руководителя карточка "откроется" под всё ещё видимым мониторингом.
+  const openApplicationById = (id) => {
+    const app = state.applications.find((a) => a.id === id);
+    if (!app) return;
+    if (app.status !== REVIEW_STATUS.PENDING) {
+      state.infoModalOpen = true;
       render();
-    };
+      return;
+    }
+    state.selectedAppId = id;
+    state.screen = 'card';
+    state.headTab = 'queue';
+    state.stubPanelOpen = false;
+    render();
+  };
+
+  root.querySelectorAll('[data-action="open-card"]').forEach((row) => {
+    const open = () => openApplicationById(Number(row.dataset.id));
     row.addEventListener('click', open);
     row.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(); } });
   });
@@ -1587,11 +1751,12 @@ function attachHandlers() {
   root.querySelectorAll('[data-action="open-card-row"]').forEach((row) => {
     row.addEventListener('click', (e) => {
       if (e.target.closest('[data-action="open-card"]')) return; // избегаем двойного рендера
-      state.selectedAppId = Number(row.dataset.id);
-      state.screen = 'card';
-      state.stubPanelOpen = false;
-      render();
+      openApplicationById(Number(row.dataset.id));
     });
+  });
+
+  root.querySelectorAll('[data-action="close-info-modal"]').forEach((btn) => {
+    btn.addEventListener('click', () => { state.infoModalOpen = false; render(); });
   });
 
   const back = root.querySelector('[data-action="back-to-queue"]');
@@ -1690,7 +1855,6 @@ function attachHandlers() {
     const app = state.applications.find((a) => a.id === state.transferModalAppId);
     if (app) {
       app.transferred = true;
-      app.status = 'Переведена на полный трек';
       app.transferReason = reason;
       app.transferDate = new Date();
       const reasonDisplay = reason.charAt(0).toUpperCase() + reason.slice(1);
@@ -1721,7 +1885,7 @@ function attachHandlers() {
     btn.addEventListener('click', () => {
       state.monitoringPeriod = btn.dataset.period;
       render();
-      const label = { week: 'неделя', month: 'месяц', quarter: 'квартал' }[state.monitoringPeriod];
+      const label = { week: 'неделя', month: 'месяц', quarter: 'квартал', year: 'год' }[state.monitoringPeriod];
       showToast('info', `Показатели пересчитаны за период: ${label}`);
     });
   });
