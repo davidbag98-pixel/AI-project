@@ -91,7 +91,9 @@
   }
   .status-filter-option{display:flex;align-items:center;gap:8px;padding:6px 10px;font-size:13px;cursor:pointer;white-space:nowrap;}
   .status-filter-option:hover{background:#F4F8FA;}
-  .status-filter-option input{margin:0;}
+  /* Сброс: чекбокс — прямой потомок .filter-field, поэтому иначе унаследует
+     min-width:170px/паддинги/рамку из общего правила для текстовых полей и select. */
+  .status-filter-option input[type=checkbox]{margin:0;min-width:0;width:14px;height:14px;padding:0;border:none;background:none;flex-shrink:0;}
 
   .summary-line{font-size:13px;color:var(--text-secondary);margin:14px 0 10px;display:flex;gap:6px;flex-wrap:wrap;}
   .summary-line b{color:var(--text);font-weight:600;}
@@ -160,7 +162,9 @@
   .track-badge-wrap{display:flex;flex-direction:column;align-items:flex-end;gap:5px;}
   .track-badge-label{font-size:11px;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.04em;}
 
-  .field-grid{display:grid;grid-template-columns:1fr 1fr;gap:0 32px;margin:0;}
+  /* grid-auto-flow:column + заданное число строк = сначала заполняется весь
+     левый столбец сверху вниз, потом правый — а не построчно слева направо. */
+  .field-grid{display:grid;grid-template-columns:1fr 1fr;grid-template-rows:repeat(5, auto);grid-auto-flow:column;gap:0 32px;margin:0;}
   .field-row{display:flex;justify-content:space-between;gap:16px;padding:8px 0;border-bottom:1px solid var(--border);}
   .field-row .field-name,.field-row .field-value{margin:0;}
   .field-row .field-name{color:var(--text-secondary);}
@@ -721,23 +725,23 @@ const STATUS_SORT_ORDER = { [REVIEW_STATUS.PENDING]: 0, [REVIEW_STATUS.IN_REVIEW
 // оказалась бы после "60 и старше" — цифры в начале строки сортируются раньше букв).
 const AGE_GROUP_SORT_ORDER = { 'до 18': 0, '18–44': 1, '45–59': 2, '60 и старше': 3 };
 
-// "На рассмотрении" — подавляющее большинство (~70%): в реальном бюро в
-// любой момент времени в очереди преимущественно дела в работе. Остаток
-// распределён между "Ожидает" и "Принято решение" с небольшим сдвигом по
-// давности заявки (чем "старше" заявка, тем выше шанс, что решение уже принято).
+// "Ожидает рассмотрения" — подавляющее большинство (~70%), чтобы кликабельную
+// заявку в демонстрации не приходилось долго искать. Остаток распределён между
+// "На рассмотрении" и "Принято решение" со сдвигом по давности заявки (чем
+// "старше" заявка, тем выше шанс, что решение уже принято).
 function pickReviewStatus(rng, daysAgo) {
   if (daysAgo <= 9) {
     return weightedChoice(rng, [
-      [REVIEW_STATUS.PENDING, 0.22], [REVIEW_STATUS.IN_REVIEW, 0.70], [REVIEW_STATUS.DECIDED, 0.08],
+      [REVIEW_STATUS.PENDING, 0.70], [REVIEW_STATUS.IN_REVIEW, 0.25], [REVIEW_STATUS.DECIDED, 0.05],
     ]);
   }
   if (daysAgo <= 19) {
     return weightedChoice(rng, [
-      [REVIEW_STATUS.PENDING, 0.15], [REVIEW_STATUS.IN_REVIEW, 0.70], [REVIEW_STATUS.DECIDED, 0.15],
+      [REVIEW_STATUS.PENDING, 0.70], [REVIEW_STATUS.IN_REVIEW, 0.18], [REVIEW_STATUS.DECIDED, 0.12],
     ]);
   }
   return weightedChoice(rng, [
-    [REVIEW_STATUS.PENDING, 0.10], [REVIEW_STATUS.IN_REVIEW, 0.68], [REVIEW_STATUS.DECIDED, 0.22],
+    [REVIEW_STATUS.PENDING, 0.68], [REVIEW_STATUS.IN_REVIEW, 0.12], [REVIEW_STATUS.DECIDED, 0.20],
   ]);
 }
 
