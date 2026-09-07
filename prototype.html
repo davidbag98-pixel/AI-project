@@ -919,11 +919,12 @@ function buildThroughputStats(rng) {
 // данных очереди (неделя/месяц), и для синтетической квартальной агрегации.
 function computeFlowStatsFromList(apps) {
   const total = apps.length;
-  const simplified = apps.filter((a) => a.track === 'simplified').length;
+  const simplifiedApps = apps.filter((a) => a.track === 'simplified');
   const full = apps.filter((a) => a.track === 'full').length;
   const reducedApps = apps.filter((a) => a.deadlineType === 'reduced');
   return {
-    total, simplified, full,
+    total, simplified: simplifiedApps.length, full,
+    transferred: simplifiedApps.filter((a) => a.transferred).length,
     reduced: reducedApps.length,
     reducedSimplified: reducedApps.filter((a) => a.track === 'simplified').length,
     reducedFull: reducedApps.filter((a) => a.track === 'full').length,
@@ -949,7 +950,13 @@ function buildScaledFlowStats(rng, monthStats, scaleBase, scaleJitter) {
   const reduced = Math.round(total * reducedShare);
   const reducedSimplified = Math.round(reduced * simplifiedShare);
   const reducedFull = reduced - reducedSimplified;
-  return { total, simplified, full, reduced, reducedSimplified, reducedFull };
+  // Доля переводов (упрощённый → полный) держится около фактической месячной
+  // с небольшим разбросом — чтобы показатель в "Контроле качества" тоже
+  // менялся при переключении периода, а не только полоса распределения.
+  const transferRateBase = monthStats.simplified ? monthStats.transferred / monthStats.simplified : 0;
+  const transferRate = Math.max(0, transferRateBase + (rng() - 0.5) * 0.02);
+  const transferred = Math.round(simplified * transferRate);
+  return { total, simplified, full, transferred, reduced, reducedSimplified, reducedFull };
 }
 
 function generateDataset() {
@@ -1685,8 +1692,8 @@ function renderDurationBlock() {
 }
 
 function renderQualityBlock(flow) {
-  const simplifiedBase = state.applications.filter((a) => a.track === 'simplified').length;
-  const transferredCount = state.applications.filter((a) => a.transferred).length;
+  const simplifiedBase = flow.simplified;
+  const transferredCount = flow.transferred;
   const transferRate = simplifiedBase ? transferredCount / simplifiedBase : 0;
   const overLimit = transferRate > CONFIG.TRANSFER_RATE_LIMIT;
 
